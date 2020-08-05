@@ -1,0 +1,13 @@
+"""ID""","""Name""","""Desc""","""Icon""","""NameDict""","""Script"""
+1,,,,,OptImpactBomb
+2,,,,,OptImpactLine
+3,,,,,OptImpactBombEnlarge
+4,,,,,OptImpactLineEnlarge
+5,,,,,OptImpactBombTrap
+6,,,,,OptImpactLineTrap
+7,,,,,OptImpactBombReact
+8,,,,,OptImpactLineReact
+9,,,,,OptImpactBombLighting
+10,,,,,OptImpactLineLighting
+11,,,,,OptImpactBombAuto
+12,,,,,OptImpactLineAuto
