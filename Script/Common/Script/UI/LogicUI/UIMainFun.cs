@@ -44,7 +44,19 @@ public class UIMainFun : UIBase
 
         return true;
     }
-    
+
+    public static void ShowRedTip()
+    {
+        var instance = GameCore.Instance.UIManager.GetUIInstance<UIMainFun>(UIConfig.UIMainFun);
+        if (instance == null)
+            return;
+
+        if (!instance.isActiveAndEnabled)
+            return;
+
+        instance.RedTipEnable();
+    }
+
     #endregion
 
     #region 
@@ -62,6 +74,7 @@ public class UIMainFun : UIBase
             isInFight = (bool)hash["IsInFight"];
         }
 
+        RedTipEnable();
     }
 
     #endregion
@@ -90,7 +103,113 @@ public class UIMainFun : UIBase
     public void OnBtnWeapon()
     {
         UIChangeWeapon.ShowAsyn();
+
+        RefreshWeaponTip();
     }
+
+    public void OnBtnGem()
+    {
+        UIGemPack.ShowAsyn();
+
+        RefreshGemTip();
+    }
+
+    public void OnBtnTest()
+    {
+        foreach (var stageRecord in Tables.TableReader.StageInfo.Records.Values)
+        {
+            var mapRecord = Tables.StageMapRecord.ReadStageMap(stageRecord.ScenePath);
+            mapRecord = RandomMonster.RandomStage(stageRecord.Id, mapRecord);
+            //RandomMonster.RefreshMonsterHP(mapRecord);
+            //RandomMonster.RefreshMonsterAtk(mapRecord);
+            //mapRecord = RandomMonster.RefreshStageHPBall(mapRecord);
+            //mapRecord = RandomMonster.RefreshStageStar(mapRecord, stageRecord.Id);
+            mapRecord.WriteStageMap();
+            //RandomMonster.WriteSkills();
+
+            //break;
+        }
+
+        RandomMonster.WriteMonsters();
+        RandomMonster.WriteSkills();
+    }
+
+    public void OnBtnTestStagePass(int starIdx)
+    {
+        //GameCore.Instance.TestStage();
+
+    }
+
+    #endregion
+
+    #region red tip
+
+    public GameObject _WeaponTip;
+    public GameObject _GemTip;
+
+    private static int _LastWeaponCnt = 0;
+    private static int _LastGemCnt = 0;
+
+    public void RedTipEnable()
+    {
+        if (_LastWeaponCnt == 0)
+        {
+            _LastWeaponCnt = WeaponDataPack.Instance._UnLockWeapons.Count;
+            _WeaponTip.gameObject.SetActive(false);
+        }
+        else
+        {
+            if (WeaponDataPack.Instance._UnLockWeapons.Count > _LastWeaponCnt)
+            {
+                _WeaponTip.gameObject.SetActive(true);
+
+                UIFuncTips.ShowAsyn(0, "2026");
+            }
+            else
+            {
+                _WeaponTip.gameObject.SetActive(false);
+            }
+        }
+
+        if (_LastGemCnt == 0)
+        {
+            _LastGemCnt = GemDataPack.Instance._GemItems._PackItems.Count;
+            _GemTip.gameObject.SetActive(false);
+        }
+        else
+        {
+            if (GemDataPack.Instance._GemItems._PackItems.Count > _LastGemCnt)
+            {
+                _GemTip.gameObject.SetActive(true);
+
+                if (GemDataPack.Instance.IsSelectedGemLvLow())
+                {
+                    UIFuncTips.ShowAsyn(1, "2026");
+                }
+            }
+            else
+            {
+                _GemTip.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    public void RefreshWeaponTip()
+    {
+        _LastWeaponCnt = WeaponDataPack.Instance._UnLockWeapons.Count;
+
+        RedTipEnable();
+    }
+
+    public void RefreshGemTip()
+    {
+        _LastGemCnt = GemDataPack.Instance._GemItems._PackItems.Count;
+
+        RedTipEnable();
+    }
+
+    public void RedTipDisable()
+    { }
 
     #endregion
 }

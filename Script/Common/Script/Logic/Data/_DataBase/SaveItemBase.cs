@@ -8,7 +8,7 @@ public class SaveItemBase
     public string _SaveFileName;
     public bool _DirtyFlag;
 
-    public void SaveClass(bool isSaveChild)
+    public virtual void SaveClass(bool isSaveChild)
     {
         if (string.IsNullOrEmpty(_SaveFileName))
         {
@@ -17,7 +17,7 @@ public class SaveItemBase
         DataPackSave.SaveData(this, isSaveChild);
     }
 
-    public void LoadClass(bool loadChild)
+    public virtual void LoadClass(bool loadChild)
     {
         DataPackSave.LoadData(this, loadChild);
     }

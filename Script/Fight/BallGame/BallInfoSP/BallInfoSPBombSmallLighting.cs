@@ -75,8 +75,16 @@ public class BallInfoSPBombSmallLighting : BallInfoSPBase
     private List<BallInfo> GetBombBalls(List<BallInfo> moveBalls)
     {
         var moveBall = moveBalls[0];
-        if (moveBalls[1] == _BallInfo)
+        if (moveBall == _BallInfo)
+        {
+            moveBall = moveBalls[1];
+        }
+
+        if (moveBalls[1] == BallInfo
+            && (moveBall._BallInfoSP is BallInfoSPBombSmallLighting || moveBall._BallInfoSP is BallInfoSPBombBigLighting))
+        {
             return null;
+        }
 
         List<BallInfo> bombBalls = new List<BallInfo>();
 

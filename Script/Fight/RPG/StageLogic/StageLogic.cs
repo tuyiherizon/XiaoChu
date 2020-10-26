@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-[Serializable]
 public class WaveInfo
 {
-    [SerializeField]
     public List<string> NPCs = new List<string>();
 }
 
-public class StageLogic : MonoBehaviour
+public class StageLogic
 {
-    [SerializeField]
     public List<WaveInfo> _Waves = new List<WaveInfo>();
 }

@@ -38,6 +38,7 @@ public class OptExtra
 {
     public string _ExtraType;
     public BallInfo _OptBall;
+    public List<BallInfo> _ElimitBalls;
 }
 
 public class BallBox
@@ -64,7 +65,7 @@ public class BallBox
 
     public static bool IsTypeSP(int type)
     {
-        return (BallType)type > BallType.SPTrapStart && (BallType)type < BallType.SPLineEnd;
+        return (BallType)type > BallType.SPTrapStart && (BallType)type < BallType.SPRPGEnd;
     }
     #endregion
 
@@ -94,6 +95,9 @@ public class BallBox
     public BallInfo[][] _BallBoxInfo;
     public bool _IsContainEmptyNormal = false;
 
+    public int _ElimitBombCnt = 0;
+    public int _ElimitTrapCnt = 0;
+
     private StageMapRecord _MapRecord;
 
     public void Init(StageMapRecord mapRecord)
@@ -111,11 +115,17 @@ public class BallBox
             }
         }
 
-        var weaponType = Type.GetType(WeaponDataPack.Instance.SelectedWeaponItem.Script);
-        Debug.Log("OptType:" + WeaponDataPack.Instance.SelectedWeaponItem.Script);
+        var weaponType = Type.GetType(WeaponDataPack.Instance.SelectedWeaponItem.WeaponRecord.Script);
+        Debug.Log("OptType:" + WeaponDataPack.Instance.SelectedWeaponItem.WeaponRecord.Script);
         _OptImpact = Activator.CreateInstance(weaponType) as OptImpactBase;
         _OptImpact.Init();
         _Round = 1;
+
+        _ElimitBombCnt = 0;
+        _ElimitTrapCnt = 0;
+
+        _OptRound = 0;
+        _Round = 0;
     }
 
     public void Refresh()
@@ -128,11 +138,15 @@ public class BallBox
             }
         }
         InitBallInfo();
+
+        RandomMonster._MapRecord.Clear();
+        RandomMonster.RecordMap(_BallBoxInfo);
     }
 
-    public void RefreshNormal()
+    public void RefreshNormalForElimit(bool refreshElimitPos)
     {
         List<BallInfo> normalBalls = new List<BallInfo>();
+        
         for (int j = 0; j < _BallBoxInfo[0].Length; ++j)
         {
             for (int i = 0; i < _BallBoxInfo.Length; ++i)
@@ -143,10 +157,144 @@ public class BallBox
                 }
             }
         }
-        foreach(var normalBall in normalBalls)
+
+        List<BallInfo> elimitPos = new List<BallInfo>();
+        if (refreshElimitPos)
+        {
+            foreach (var normalBall in normalBalls)
+            {
+                int i = (int)normalBall.Pos.x;
+                int j = (int)normalBall.Pos.y;
+
+                var ballnext1 = GetBallInfo(i + 1, j);
+                var ballnext2 = GetBallInfo(i + 2, j);
+                if (ballnext1!=null && ballnext2 != null && ballnext1.IsNormalBall() && ballnext2.IsNormalBall())
+                {
+                    var ballmove = GetBallInfo(i+3,j);
+                    if (ballmove != null && ballmove.IsNormalBall())
+                    {
+                        elimitPos.Add(normalBall);
+                        elimitPos.Add(ballnext2);
+                        elimitPos.Add(ballmove);
+                        break;
+                    }
+
+                    ballmove = GetBallInfo(i, j + 1);
+                    if (ballmove != null && ballmove.IsNormalBall())
+                    {
+                        elimitPos.Add(ballnext1);
+                        elimitPos.Add(ballnext2);
+                        elimitPos.Add(ballmove);
+                        break;
+                    }
+
+                    ballmove = GetBallInfo(i + 1, j + 1);
+                    if (ballmove != null && ballmove.IsNormalBall())
+                    {
+                        elimitPos.Add(normalBall);
+                        elimitPos.Add(ballnext2);
+                        elimitPos.Add(ballmove);
+                        break;
+                    }
+
+                    ballmove = GetBallInfo(i + 2, j + 1);
+                    if (ballmove != null && ballmove.IsNormalBall())
+                    {
+                        elimitPos.Add(ballnext1);
+                        elimitPos.Add(normalBall);
+                        elimitPos.Add(ballmove);
+                        break;
+                    }
+                }
+
+                ballnext1 = GetBallInfo(i, j + 1);
+                ballnext2 = GetBallInfo(i, j + 2);
+                if (ballnext1 != null && ballnext2 != null && ballnext1.IsNormalBall() && ballnext2.IsNormalBall())
+                {
+                    var ballmove = GetBallInfo(i, j + 3);
+                    if (ballmove != null && ballmove.IsNormalBall())
+                    {
+                        elimitPos.Add(ballnext1);
+                        elimitPos.Add(normalBall);
+                        elimitPos.Add(ballmove);
+                        break;
+                    }
+
+                    ballmove = GetBallInfo(i + 1, j);
+                    if (ballmove != null && ballmove.IsNormalBall())
+                    {
+                        elimitPos.Add(ballnext1);
+                        elimitPos.Add(ballnext2);
+                        elimitPos.Add(ballmove);
+                        break;
+                    }
+
+                    ballmove = GetBallInfo(i + 1, j + 1);
+                    if (ballmove != null && ballmove.IsNormalBall())
+                    {
+                        elimitPos.Add(normalBall);
+                        elimitPos.Add(ballnext2);
+                        elimitPos.Add(ballmove);
+                        break;
+                    }
+
+                    ballmove = GetBallInfo(i + 1, j + 2);
+                    if (ballmove != null && ballmove.IsNormalBall())
+                    {
+                        elimitPos.Add(ballnext1);
+                        elimitPos.Add(normalBall);
+                        elimitPos.Add(ballmove);
+                        break;
+                    }
+                }
+            }
+
+            List<BallType> exportBall = new List<BallType>();
+            foreach (var elimit in elimitPos)
+            {
+                int i = (int)elimit.Pos.x;
+                int j = (int)elimit.Pos.y;
+                var ballmove = GetBallInfo(i + 1, j);
+                if (ballmove != null && ballmove._BallInfoSP != null && ballmove.IsCanNormalElimit())
+                {
+                    exportBall.Add(ballmove.BallType);
+                }
+
+                ballmove = GetBallInfo(i - 1, j);
+                if (ballmove != null && ballmove._BallInfoSP != null && ballmove.IsCanNormalElimit())
+                {
+                    exportBall.Add(ballmove.BallType);
+                }
+
+                ballmove = GetBallInfo(i, j + 1);
+                if (ballmove != null && ballmove._BallInfoSP != null && ballmove.IsCanNormalElimit())
+                {
+                    exportBall.Add(ballmove.BallType);
+                }
+
+                ballmove = GetBallInfo(i, j - 1);
+                if (ballmove != null && ballmove._BallInfoSP != null && ballmove.IsCanNormalElimit())
+                {
+                    exportBall.Add(ballmove.BallType);
+                }
+            }
+            
+            var randomElimitType = BallInfo.GetRandomBallType(exportBall);
+            foreach (var elimit in elimitPos)
+            {
+                elimit.SetBallType(randomElimitType);
+            }
+        }
+
+        
+
+        foreach (var normalBall in normalBalls)
         {
             //for (int i = 0; i < _BallBoxInfo.Length; ++i)
             {
+                if (elimitPos.Contains(normalBall))
+                    continue;
+
                 int i = (int)normalBall.Pos.x;
                 int j = (int)normalBall.Pos.y;
                 List<BallType> exportBall = new List<BallType>();
@@ -241,6 +389,7 @@ public class BallBox
         {
             for (int i = 0; i < _BallBoxInfo.Length; ++i)
             {
+                _BallBoxInfo[i][j].ClearElimitInfo();
                 if (!_BallBoxInfo[i][j].IsCanFillNormal())
                     continue;
 
@@ -303,7 +452,7 @@ public class BallBox
                 }
 
                 _BallBoxInfo[i][j].SetRandomBall(exportBall);
-                _BallBoxInfo[i][j]._BornRound = _Round;
+                _BallBoxInfo[i][j].BornRound = _Round;
             }
 
         }
@@ -358,6 +507,8 @@ public class BallBox
         _RoundTotalEliminate.Clear();
 
         var reshowBalls = BallInfoSPTrapPosion.OnPosionRoundEnd();
+
+        RandomMonster.RecordMap(_BallBoxInfo);
         return reshowBalls;
     }
 
@@ -380,20 +531,21 @@ public class BallBox
 
     #region elimit
 
-    private Dictionary<BallType, int> _RoundTotalEliminate = new Dictionary<BallType, int>();
+    public Dictionary<BallType, int> _RoundTotalEliminate = new Dictionary<BallType, int>();
 
     private List<BallInfo> _CurrentNormalEliminateBalls = new List<BallInfo>();
     private List<BallInfo> _CurrentSPEliminateBalls = new List<BallInfo>();
-    private List<OptExtra> _CurrentOptExtra = new List<OptExtra>();
+    public List<OptExtra> _CurrentOptExtra = new List<OptExtra>();
 
-    private void AddEliminateBall(BallInfo ballInfo)
+    private bool AddEliminateBall(BallInfo ballInfo)
     {
         if (!_CurrentNormalEliminateBalls.Contains(ballInfo))
         {
             _CurrentNormalEliminateBalls.Add(ballInfo);
+            return true;
         }
 
-        
+        return false;
     }
 
     private void AddSPEliminateBall(BallInfo ballInfo)
@@ -433,6 +585,17 @@ public class BallBox
         }
     }
 
+    public OptExtra GetOptExtra(List<BallInfo> checkBalls)
+    {
+        foreach (var optExtra in _CurrentOptExtra)
+        {
+            if (checkBalls.Contains(optExtra._OptBall))
+                return optExtra;
+        }
+
+        return null;
+    }
+
     public List<BallInfo> CurrentElimitnate()
     {
         ++_Round;
@@ -468,14 +631,36 @@ public class BallBox
 
         foreach (var optEx in _CurrentOptExtra)
         {
+            foreach (var absorbBall in optEx._ElimitBalls)
+            {
+                if (absorbBall._BallInfoSP is BallInfoSPLineReact)
+                {
+                    absorbBall.Clear();
+                }
+            }
+
             _OptImpact.SetElimitExtra(optEx._ExtraType, optEx._OptBall);
+            
         }
 
+        
+
+        return exploreBalls;
+    }
+
+    public void ClearElimitInfo()
+    {
         _CurrentNormalEliminateBalls.Clear();
         _CurrentSPEliminateBalls.Clear();
         _CurrentOptExtra.Clear();
 
-        return exploreBalls;
+        for (int j = 0; j < _BallBoxInfo[0].Length; ++j)
+        {
+            for (int i = 0; i < _BallBoxInfo.Length; ++i)
+            {
+                _BallBoxInfo[i][j].ClearElimitInfo();
+            }
+        }
     }
 
     public List<BallInfo> AfterElimitnate()
@@ -486,8 +671,11 @@ public class BallBox
         List<BallInfo> ballList = new List<BallInfo>();
         foreach (var autoBomb in BallInfoSPBombAuto.AutoBombList)
         {
-            autoBomb.BallInfo._BornRound = autoBomb.BallInfo._BornRound - 1;
-            ballList.Add(autoBomb.BallInfo);
+            if (autoBomb.BallInfo._BallInfoSP == autoBomb)
+            {
+                autoBomb.BallInfo.BornRound = autoBomb.BallInfo.BornRound - 1;
+                ballList.Add(autoBomb.BallInfo);
+            }
         }
 
         var bombBalls = CheckSpElimit(ballList);
@@ -501,313 +689,98 @@ public class BallBox
 
     public ExchangeBalls FindAnyEliminate()
     {
+        EliminateInfo exangeBall = new EliminateInfo();
         for (int j = 0; j < _BallBoxInfo[0].Length; ++j)
         {
             for (int i = 0; i < _BallBoxInfo.Length; ++i)
             {
+                var curBall = GetBallInfo(i, j);
+                var nextBall = GetBallInfo(i + 1, j);
+                if (nextBall == null)
+                    continue;
 
-                if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i + 1, j)))
+                if (!curBall.IsCanMove() || !nextBall.IsCanMove())
+                    continue;
+
+                ExchangeBalls(curBall, nextBall);
+
+                var elimitBallInfos = TestNormalEliminate(new List<BallInfo>() { curBall, nextBall });
+                var spElimitsMove = TestSpMove(new List<BallInfo>() { curBall, nextBall });
+                var spElimitsElimit = TestSpElimit(elimitBallInfos);
+                int checkCnt = elimitBallInfos.Count;
+                foreach (var spElimit in spElimitsMove)
                 {
-                    var moveBall = GetBallInfo(i + 2, j);
-                    if (moveBall != null && moveBall.IsCanMove())
+                    if (!elimitBallInfos.Contains(spElimit))
                     {
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i + 3, j)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i + 3, j), GetBallInfo(i + 2, j));
-                        }
-
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i + 2, j - 1)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i + 2, j - 1), GetBallInfo(i + 2, j));
-                        }
-
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i + 2, j + 1)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i + 2, j + 1), GetBallInfo(i + 2, j));
-                        }
+                        ++checkCnt;
                     }
-
-                    moveBall = GetBallInfo(i - 1, j);
-                    if (moveBall != null && moveBall.IsCanMove())
+                }
+                foreach (var spElimit in spElimitsElimit)
+                {
+                    if (!elimitBallInfos.Contains(spElimit)
+                        && !spElimitsMove.Contains(spElimit))
                     {
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i - 2, j)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i - 2, j), GetBallInfo(i - 1, j));
-                        }
-
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i - 1, j - 1)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i - 1, j - 1), GetBallInfo(i - 1, j));
-                        }
-
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i - 1, j + 1)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i - 1, j + 1), GetBallInfo(i - 1, j));
-                        }
+                        ++checkCnt;
                     }
                 }
 
-                if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i, j + 1)))
+                ExchangeBalls(curBall, nextBall);
+                if (checkCnt > 0)
                 {
-                    var moveBall = GetBallInfo(i, j + 2);
-                    if (moveBall != null && moveBall.IsCanMove())
+                    exangeBall.KeyBall = curBall;
+                    exangeBall.MoveBall = nextBall;
+                    exangeBall.EliminateCnt = checkCnt;
+                    break;
+                }
+
+                
+
+                nextBall = GetBallInfo(i, j + 1);
+                if (nextBall == null)
+                    continue;
+
+                if (!curBall.IsCanMove() || !nextBall.IsCanMove())
+                    continue;
+
+                ExchangeBalls(curBall, nextBall);
+
+                elimitBallInfos = TestNormalEliminate(new List<BallInfo>() { curBall, nextBall });
+                spElimitsMove = TestSpMove(new List<BallInfo>() { curBall, nextBall });
+                spElimitsElimit = TestSpElimit(elimitBallInfos);
+                checkCnt = elimitBallInfos.Count;
+                foreach (var spElimit in spElimitsMove)
+                {
+                    if (!elimitBallInfos.Contains(spElimit))
                     {
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i, j + 3)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i, j + 3), GetBallInfo(i, j + 2));
-                        }
-
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i - 1, j + 2)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i - 1, j + 2), GetBallInfo(i, j + 2));
-                        }
-
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i + 1, j + 2)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i + 1, j + 2), GetBallInfo(i, j + 2));
-                        }
+                        ++checkCnt;
                     }
-
-                    moveBall = GetBallInfo(i, j - 1);
-                    if (moveBall != null && moveBall.IsCanMove())
+                }
+                foreach (var spElimit in spElimitsElimit)
+                {
+                    if (!elimitBallInfos.Contains(spElimit)
+                        && !spElimitsMove.Contains(spElimit))
                     {
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i, j - 2)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i, j - 2), GetBallInfo(i, j - 1));
-                        }
-
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i + 1, j - 1)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i + 1, j - 1), GetBallInfo(i, j - 1));
-                        }
-
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i - 1, j - 1)))
-                        {
-                            return new ExchangeBalls(GetBallInfo(i - 1, j - 1), GetBallInfo(i, j - 1));
-                        }
+                        ++checkCnt;
                     }
                 }
 
-                if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i + 1, j + 1)))
+                ExchangeBalls(curBall, nextBall);
+                if (checkCnt > 0)
                 {
-                    var moveBall = GetBallInfo(i + 1, j);
-                    if (moveBall != null && moveBall.IsCanMove())
-                    {
-                        moveBall = GetBallInfo(i + 1, j + 1);
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i + 2, j)) && moveBall != null && moveBall.IsCanMove())
-                        {
-                            return new ExchangeBalls(GetBallInfo(i + 1, j + 1), GetBallInfo(i + 1, j));
-                        }
-
-                        moveBall = GetBallInfo(i, j);
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i + 1, j - 1)) && moveBall != null && moveBall.IsCanMove())
-                        {
-                            return new ExchangeBalls(GetBallInfo(i, j), GetBallInfo(i + 1, j));
-                        }
-                    }
-
-                    moveBall = GetBallInfo(i, j + 1);
-                    if (moveBall != null && moveBall.IsCanMove())
-                    {
-                        moveBall = GetBallInfo(i + 1, j + 1);
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i, j + 2)) && moveBall != null && moveBall.IsCanMove())
-                        {
-                            return new ExchangeBalls(GetBallInfo(i + 1, j + 1), GetBallInfo(i, j + 1));
-                        }
-
-                        moveBall = GetBallInfo(i, j);
-                        if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i - 1, j + 1)) && moveBall != null && moveBall.IsCanMove())
-                        {
-                            return new ExchangeBalls(GetBallInfo(i, j), GetBallInfo(i, j + 1));
-                        }
-                    }
-                    
+                    exangeBall.KeyBall = curBall;
+                    exangeBall.MoveBall = nextBall;
+                    exangeBall.EliminateCnt = checkCnt;
+                    break;
                 }
-
-                if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i - 1, j + 1)))
-                {
-
-                    var moveBall = GetBallInfo(i - 1, j);
-                    if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i - 2, j)) && moveBall != null && moveBall.IsCanMove())
-                    {
-                        return new ExchangeBalls(GetBallInfo(i - 1, j + 1), GetBallInfo(i - 1, j));
-                    }
-
-                    moveBall = GetBallInfo(i, j + 1);
-                    if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i, j + 2)) && moveBall != null && moveBall.IsCanMove())
-                    {
-                        return new ExchangeBalls(GetBallInfo(i - 1, j + 1), GetBallInfo(i, j + 1));
-                    }
-
-                    moveBall = GetBallInfo(i, j - 1);
-                    if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i - 1, j - 1)) && moveBall != null && moveBall.IsCanMove())
-                    {
-                        return new ExchangeBalls(GetBallInfo(i, j), GetBallInfo(i, j - 1));
-                    }
-
-                    moveBall = GetBallInfo(i + 1, j);
-                    if (_BallBoxInfo[i][j].IsCanNormalElimit(GetBallInfo(i + 1, j + 1)) && moveBall != null && moveBall.IsCanMove())
-                    {
-                        return new ExchangeBalls(GetBallInfo(i, j), GetBallInfo(i + 1, j));
-                    }
-                }
-
             }
         }
+        if (exangeBall.KeyBall == null)
+            return null;
 
-        return null;
+        return new ExchangeBalls(exangeBall.KeyBall, exangeBall.MoveBall);
     }
 
-    //public ExchangeBalls FindPowerEliminate()
-    //{
-
-    //    return null;
-    //    for (int j = 0; j < _BallBoxInfo[0].Length; ++j)
-    //    {
-    //        for (int i = 0; i < _BallBoxInfo.Length; ++i)
-    //        {
-    //            if(!_BallBoxInfo[i][j].IsCanMove())
-    //                continue;
-
-    //            int n = 1;
-    //            Dictionary<BallType, Dictionary<int, List<EliminateInfo>>> nearBallInfos = new Dictionary<BallType, Dictionary<int, List<EliminateInfo>>>();
-    //            var elimitInfo = GetEliminateInfo(i-1, j, i-2,j);
-    //            if (elimitInfo != null)
-    //            {
-    //                if (!nearBallInfos.ContainsKey(elimitInfo.KeyBall.BallType))
-    //                {
-    //                    nearBallInfos.Add(elimitInfo.KeyBall.BallType, new Dictionary<int, List<EliminateInfo>>());
-    //                }
-    //                if (!nearBallInfos[elimitInfo.KeyBall.BallType].ContainsKey(elimitInfo.EliminateCnt))
-    //                {
-    //                    nearBallInfos[elimitInfo.KeyBall.BallType].Add(elimitInfo.EliminateCnt, new List<EliminateInfo>());
-    //                }
-    //                nearBallInfos[elimitInfo.KeyBall.BallType][elimitInfo.EliminateCnt].Add(elimitInfo);
-    //            }
-
-    //            elimitInfo = GetEliminateInfo(i + 1, j, i + 2, j);
-    //            if (elimitInfo != null)
-    //            {
-    //                if (!nearBallInfos.ContainsKey(elimitInfo.KeyBall.BallType))
-    //                {
-    //                    nearBallInfos.Add(elimitInfo.KeyBall.BallType, new Dictionary<int, List<EliminateInfo>>());
-    //                }
-    //                if (!nearBallInfos[elimitInfo.KeyBall.BallType].ContainsKey(elimitInfo.EliminateCnt))
-    //                {
-    //                    nearBallInfos[elimitInfo.KeyBall.BallType].Add(elimitInfo.EliminateCnt, new List<EliminateInfo>());
-    //                }
-    //                nearBallInfos[elimitInfo.KeyBall.BallType][elimitInfo.EliminateCnt].Add(elimitInfo);
-    //            }
-
-    //            elimitInfo = GetEliminateInfo(i, j - 1, i, j - 2);
-    //            if (elimitInfo != null)
-    //            {
-    //                if (!nearBallInfos.ContainsKey(elimitInfo.KeyBall.BallType))
-    //                {
-    //                    nearBallInfos.Add(elimitInfo.KeyBall.BallType, new Dictionary<int, List<EliminateInfo>>());
-    //                }
-    //                if (!nearBallInfos[elimitInfo.KeyBall.BallType].ContainsKey(elimitInfo.EliminateCnt))
-    //                {
-    //                    nearBallInfos[elimitInfo.KeyBall.BallType].Add(elimitInfo.EliminateCnt, new List<EliminateInfo>());
-    //                }
-    //                nearBallInfos[elimitInfo.KeyBall.BallType][elimitInfo.EliminateCnt].Add(elimitInfo);
-    //            }
-
-    //            elimitInfo = GetEliminateInfo(i, j + 1, i, j + 2);
-    //            if (elimitInfo != null)
-    //            {
-    //                if (!nearBallInfos.ContainsKey(elimitInfo.KeyBall.BallType))
-    //                {
-    //                    nearBallInfos.Add(elimitInfo.KeyBall.BallType, new Dictionary<int, List<EliminateInfo>>());
-    //                }
-    //                if (!nearBallInfos[elimitInfo.KeyBall.BallType].ContainsKey(elimitInfo.EliminateCnt))
-    //                {
-    //                    nearBallInfos[elimitInfo.KeyBall.BallType].Add(elimitInfo.EliminateCnt, new List<EliminateInfo>());
-    //                }
-    //                nearBallInfos[elimitInfo.KeyBall.BallType][elimitInfo.EliminateCnt].Add(elimitInfo);
-    //            }
-
-    //            EliminateInfo keyEliminateInfo = null;
-    //            foreach (var nearBalls in nearBallInfos)
-    //            {
-    //                if (nearBalls.Value.Count == 2)
-    //                {
-    //                    if (nearBalls.Value.ContainsKey(2))
-    //                    {
-    //                        if (nearBalls.Value.ContainsKey(1))
-    //                        {
-    //                            keyEliminateInfo = new EliminateInfo();
-    //                            keyEliminateInfo.KeyBall = _BallBoxInfo[i][j];
-    //                            keyEliminateInfo.MoveBall = nearBalls.Value[1][0].KeyBall;
-    //                        }
-    //                        else
-    //                        {
-    //                            keyEliminateInfo = new EliminateInfo();
-    //                            keyEliminateInfo.KeyBall = _BallBoxInfo[i][j];
-    //                            keyEliminateInfo.MoveBall = nearBalls.Value[2][0].KeyBall;
-    //                        }
-    //                    }
-    //                }
-    //                else if (nearBalls.Value.Count > 2)
-    //                {
-    //                    if (nearBalls.Value.ContainsKey(1) && nearBalls.Value[1].Count == 1)
-    //                    {
-    //                        keyEliminateInfo = new EliminateInfo();
-    //                        keyEliminateInfo.KeyBall = _BallBoxInfo[i][j];
-    //                        keyEliminateInfo.MoveBall = nearBalls.Value[1][0].KeyBall;
-    //                    }
-    //                    else if (!nearBalls.Value.ContainsKey(2))
-    //                    {
-    //                        if (nearBalls.Value.ContainsKey(1) && nearBalls.Value[1].Count == 4)
-    //                        {
-    //                            keyEliminateInfo = new EliminateInfo();
-    //                            keyEliminateInfo.KeyBall = _BallBoxInfo[i][j];
-    //                            keyEliminateInfo.MoveBall = nearBalls.Value[1][0].KeyBall;
-    //                        }
-    //                        else if (nearBalls.Value.ContainsKey(1) && nearBalls.Value[1].Count == 3)
-    //                        {
-    //                            bool isAnyEqual1 = true;
-    //                            if ((int)nearBalls.Value[1][0].KeyBall.Pos.x != (int)nearBalls.Value[1][1].KeyBall.Pos.x
-    //                                && (int)nearBalls.Value[1][0].KeyBall.Pos.y != (int)nearBalls.Value[1][1].KeyBall.Pos.y)
-    //                                isAnyEqual1 = false;
-
-    //                            bool isAnyEqual2 = true;
-    //                            if ((int)nearBalls.Value[1][0].KeyBall.Pos.x != (int)nearBalls.Value[1][2].KeyBall.Pos.x
-    //                                && (int)nearBalls.Value[1][0].KeyBall.Pos.y != (int)nearBalls.Value[1][2].KeyBall.Pos.y)
-    //                                isAnyEqual2 = false;
-
-    //                            if (!isAnyEqual1 && !isAnyEqual2)
-    //                            {
-    //                                keyEliminateInfo = new EliminateInfo();
-    //                                keyEliminateInfo.KeyBall = _BallBoxInfo[i][j];
-    //                                keyEliminateInfo.MoveBall = nearBalls.Value[1][0].KeyBall;
-    //                            }
-    //                            else if (!isAnyEqual1 && !isAnyEqual2)
-    //                            {
-    //                                keyEliminateInfo = new EliminateInfo();
-    //                                keyEliminateInfo.KeyBall = _BallBoxInfo[i][j];
-    //                                keyEliminateInfo.MoveBall = nearBalls.Value[1][0].KeyBall;
-    //                            }
-    //                        }
-    //                    }
-    //                    else if (nearBalls.Value.ContainsKey(2) && nearBalls.Value[2].Count == 1)
-    //                    {
-    //                        foreach (var nearBall1 in nearBalls.Value[1])
-    //                        {
-    //                            if ((int)nearBall1.KeyBall.Pos.x != (int)nearBalls.Value[2][0].KeyBall.Pos.x
-    //                                && (int)nearBall1.KeyBall.Pos.y != (int)nearBalls.Value[2][0].KeyBall.Pos.y)
-    //                            {
-    //                                keyEliminateInfo = new EliminateInfo();
-    //                                keyEliminateInfo.KeyBall = _BallBoxInfo[i][j];
-    //                                keyEliminateInfo.MoveBall = nearBall1.KeyBall;
-    //                            }
-    //                        }
-    //                    }
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
+   
 
     public ExchangeBalls FindPowerEliminate()
     {
@@ -858,6 +831,10 @@ public class BallBox
                 nextBall = GetBallInfo(i, j + 1);
                 if (nextBall == null)
                     continue;
+
+                if (!curBall.IsCanMove() || !nextBall.IsCanMove())
+                    continue;
+
                 ExchangeBalls(curBall, nextBall);
 
                 elimitBallInfos = TestNormalEliminate(new List<BallInfo>() { curBall, nextBall });
@@ -892,6 +869,97 @@ public class BallBox
             return null;
 
         return new ExchangeBalls(exangeBall.KeyBall, exangeBall.MoveBall);
+    }
+
+    public List<BallInfo> FindLastEliminate()
+    {
+        List<BallInfo> lastElimts = new List<BallInfo>();
+        for (int j = _BallBoxInfo[0].Length - 1; j >= 0; --j)
+        {
+            for (int i = _BallBoxInfo.Length - 1; i >= 0; --i)
+            {
+                var curBall = GetBallInfo(i, j);
+                var nextBall = GetBallInfo(i - 1, j);
+                if (nextBall == null)
+                    continue;
+
+                if (!curBall.IsCanMove() || !nextBall.IsCanMove())
+                    continue;
+
+                ExchangeBalls(curBall, nextBall);
+
+                var elimitBallInfos = TestNormalEliminate(new List<BallInfo>() { curBall, nextBall });
+                var spElimitsMove = TestSpMove(new List<BallInfo>() { curBall, nextBall });
+                var spElimitsElimit = TestSpElimit(elimitBallInfos);
+                int checkCnt = elimitBallInfos.Count;
+                foreach (var spElimit in spElimitsMove)
+                {
+                    if (!elimitBallInfos.Contains(spElimit))
+                    {
+                        ++checkCnt;
+                    }
+                }
+                foreach (var spElimit in spElimitsElimit)
+                {
+                    if (!elimitBallInfos.Contains(spElimit)
+                        && !spElimitsMove.Contains(spElimit))
+                    {
+                        ++checkCnt;
+                    }
+                }
+
+                ExchangeBalls(curBall, nextBall);
+
+                if (checkCnt > 0)
+                {
+                    BallBox.AddBallInfos(lastElimts, curBall);
+                    BallBox.AddBallInfos(lastElimts, nextBall);
+                    BallBox.AddBallInfos(lastElimts, elimitBallInfos);
+
+                    return lastElimts;
+                }
+
+                
+
+                nextBall = GetBallInfo(i, j - 1);
+                if (nextBall == null)
+                    continue;
+                ExchangeBalls(curBall, nextBall);
+
+                elimitBallInfos = TestNormalEliminate(new List<BallInfo>() { curBall, nextBall });
+                spElimitsMove = TestSpMove(new List<BallInfo>() { curBall, nextBall });
+                spElimitsElimit = TestSpElimit(elimitBallInfos);
+                checkCnt = elimitBallInfos.Count;
+                foreach (var spElimit in spElimitsMove)
+                {
+                    if (!elimitBallInfos.Contains(spElimit))
+                    {
+                        ++checkCnt;
+                    }
+                }
+                foreach (var spElimit in spElimitsElimit)
+                {
+                    if (!elimitBallInfos.Contains(spElimit)
+                        && !spElimitsMove.Contains(spElimit))
+                    {
+                        ++checkCnt;
+                    }
+                }
+
+                ExchangeBalls(curBall, nextBall);
+
+                if (checkCnt > 0)
+                {
+                    BallBox.AddBallInfos(lastElimts, curBall);
+                    BallBox.AddBallInfos(lastElimts, nextBall);
+                    BallBox.AddBallInfos(lastElimts, elimitBallInfos);
+                    return lastElimts;
+                }
+                
+            }
+        }
+
+        return lastElimts;
     }
 
     private EliminateInfo GetEliminateInfo(int posX, int posY, int posX2, int posY2)
@@ -947,56 +1015,92 @@ public class BallBox
         return elimitBalls;
     }
 
+    public List<BallInfo> CheckNormalEliminate()
+    {
+        List<BallInfo> allBalls = new List<BallInfo>();
+        foreach (var ballLine in _BallBoxInfo)
+        {
+            foreach (var ballInfo in ballLine)
+            {
+                allBalls.Add(ballInfo);
+            }
+        }
+        return CheckNormalEliminate(allBalls);
+    }
+
     public List<BallInfo> CheckNormalEliminate(List<BallInfo> checkBalls)
     {
         List<BallInfo> elimitBalls = new List<BallInfo>();
+
+        foreach (var checkBall in checkBalls)
         {
-            foreach(var checkBall in checkBalls)
+            BallInfo curBall = checkBall;
+
+            if (curBall.BornRound == _Round)
+                continue;
+
+            var clumnElimit = CheckClumnElimit((int)checkBall.Pos.x, (int)checkBall.Pos.y);
+            var rawElimit = CheckRawElimit((int)checkBall.Pos.x, (int)checkBall.Pos.y);
+            int elimitNum = 0;
+            int clumnNum = 0;
+            int rowNum = 0;
+
+            bool isAddNewBall = false;
+            if (clumnElimit != null)
             {
-                BallInfo curBall = checkBall;
+                clumnNum = clumnElimit.Count;
+                elimitNum += clumnNum;
+                elimitBalls.AddRange(clumnElimit);
 
-                if (curBall._BornRound == _Round)
-                    continue;
-
-                var clumnElimit = CheckClumnElimit((int)checkBall.Pos.x, (int)checkBall.Pos.y);
-                var rawElimit = CheckRawElimit((int)checkBall.Pos.x, (int)checkBall.Pos.y);
-                int elimitNum = 0;
-                int clumnNum = 0;
-                int rowNum = 0;
-                if (clumnElimit != null)
+                foreach (var elimitBall in clumnElimit)
                 {
-                    clumnNum = clumnElimit.Count;
-                    elimitNum += clumnNum;
-                    elimitBalls.AddRange(clumnElimit);
-
-                    foreach (var elimitBall in clumnElimit)
+                    //elimitBall.OnNormalElimit();
+                    if (AddEliminateBall(elimitBall))
                     {
-                        //elimitBall.OnNormalElimit();
-                        AddEliminateBall(elimitBall);
+                        isAddNewBall = true;
                     }
-                }
-                if (rawElimit != null)
-                {
-                    rowNum = rawElimit.Count;
-                    elimitNum += rowNum;
-                    elimitBalls.AddRange(rawElimit);
 
-                    foreach (var elimitBall in rawElimit)
+                    elimitBall._BombPrivite = 1;
+                }
+            }
+            if (rawElimit != null)
+            {
+                rowNum = rawElimit.Count;
+                elimitNum += rowNum;
+                elimitBalls.AddRange(rawElimit);
+
+                foreach (var elimitBall in rawElimit)
+                {
+                    //elimitBall.OnNormalElimit();
+                    if (AddEliminateBall(elimitBall))
                     {
-                        //elimitBall.OnNormalElimit();
-                        AddEliminateBall(elimitBall);
+                        isAddNewBall = true;
                     }
-                }
 
-                if (elimitNum > _DefaultDisapearCnt)
+                    elimitBall._BombPrivite = 1;
+                }
+            }
+
+            if (elimitNum > _DefaultDisapearCnt)
+            {
+                var checkBallExtras = AddBallInfos(clumnElimit, rawElimit);
+                var exitOptExtra = GetOptExtra(checkBallExtras);
+                if (exitOptExtra == null || exitOptExtra._ElimitBalls.Count < elimitNum)
                 {
+                    if (exitOptExtra != null)
+                    {
+                        _CurrentOptExtra.Remove(exitOptExtra);
+                    }
                     OptExtra optExtra = new OptExtra();
                     optExtra._ExtraType = _OptImpact.GetExtraSpType(clumnNum, rowNum, curBall);
                     optExtra._OptBall = curBall;
+                    optExtra._ElimitBalls = AddBallInfos(clumnElimit, rawElimit);
                     //_OptImpact.ElimitExtra(elimitNum, curBall);
                     AddOptExtra(optExtra);
                 }
+                
             }
+
         }
 
         return elimitBalls;
@@ -1009,7 +1113,7 @@ public class BallBox
         int nextCntRight = 1;
         while (nextClumnBall != null)
         {
-            if (!_CurrentNormalEliminateBalls.Contains(nextClumnBall) && curBall.IsCanNormalElimit(nextClumnBall))
+            if (curBall.IsCanNormalElimit(nextClumnBall))
             {
                 ++nextCntRight;
                 nextClumnBall = GetBallInfo(i + nextCntRight, j);
@@ -1023,7 +1127,7 @@ public class BallBox
         int nextCntLeft = 1;
         while (nextClumnBall != null)
         {
-            if (!_CurrentNormalEliminateBalls.Contains(nextClumnBall) && curBall.IsCanNormalElimit(nextClumnBall))
+            if (curBall.IsCanNormalElimit(nextClumnBall))
             {
                 ++nextCntLeft;
                 nextClumnBall = GetBallInfo(i - nextCntLeft, j);
@@ -1065,7 +1169,7 @@ public class BallBox
         var nextCntUp = 1;
         while (nextRawBall != null)
         {
-            if (!_CurrentNormalEliminateBalls.Contains(nextRawBall) && curBall.IsCanNormalElimit(nextRawBall))
+            if (curBall.IsCanNormalElimit(nextRawBall))
             {
                 ++nextCntUp;
                 nextRawBall = GetBallInfo(i, j + nextCntUp);
@@ -1079,7 +1183,7 @@ public class BallBox
         var nextCntDown = 1;
         while (nextRawBall != null)
         {
-            if (!_CurrentNormalEliminateBalls.Contains(nextRawBall) && curBall.IsCanNormalElimit(nextRawBall))
+            if (curBall.IsCanNormalElimit(nextRawBall))
             {
                 ++nextCntDown;
                 nextRawBall = GetBallInfo(i, j - nextCntDown);
@@ -1112,6 +1216,54 @@ public class BallBox
         }
 
         return null;
+    }
+
+    public bool CheckElimitSimple()
+    {
+        List<BallInfo> allBalls = new List<BallInfo>();
+        foreach (var ballLine in _BallBoxInfo)
+        {
+            foreach (var ballInfo in ballLine)
+            {
+                int i = (int)ballInfo.Pos.x;
+                int j = (int)ballInfo.Pos.y;
+
+                int nextCntUp = 1;
+                BallInfo nextRawBall = GetBallInfo(i, j + nextCntUp);
+                while (nextRawBall != null)
+                {
+                    if (ballInfo.IsCanNormalElimit(nextRawBall))
+                    {
+                        ++nextCntUp;
+                        nextRawBall = GetBallInfo(i, j + nextCntUp);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                if (nextCntUp >= _DefaultDisapearCnt)
+                {
+                    return true;
+                }
+
+                nextCntUp = 1;
+                nextRawBall = GetBallInfo(i + nextCntUp, j);
+                while (nextRawBall != null)
+                {
+                    if (ballInfo.IsCanNormalElimit(nextRawBall))
+                    {
+                        ++nextCntUp;
+                        nextRawBall = GetBallInfo(i + nextCntUp, j);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public List<BallInfo> CheckSpElimit(List<BallInfo> checkBalls)
@@ -1174,7 +1326,7 @@ public class BallBox
         return spElimit;
     }
 
-    public void CheckSpElimitCircle(List<BallInfo> checkBalls, ref List<BallInfo> spElimitBalls, bool isCheckMove = false, bool testMode = false)
+    public void CheckSpElimitCircle(List<BallInfo> checkBalls, ref List<BallInfo> spElimitBalls, bool isCheckMove = false, bool testMode = false, int deepth = 0)
     {
         foreach (var elimitBall in checkBalls)
         {
@@ -1189,13 +1341,23 @@ public class BallBox
             {
                 spElimits = elimitBall.CheckSPMove(checkBalls);
             }
-            if (spElimits != null && spElimits.Count > 0)
+            if (spElimits != null && spElimits.Count > 0 && !elimitBall._IsBoomSP)
             {
+                if (!testMode)
+                {
+                    elimitBall._IsBoomSP = true;
+
+                    if (elimitBall._BombPrivite == 0)
+                    {
+                        elimitBall._BombPrivite = deepth + 1;
+                    }
+                }
+                
                 foreach (var subElimit in spElimits)
                 {
                     if (!testMode)
                     {
-                        if (subElimit._BornRound == _Round)
+                        if (subElimit.BornRound == _Round)
                             continue;
                     }
 
@@ -1204,9 +1366,19 @@ public class BallBox
                         spElimitBalls.Add(subElimit);
                         subElimitList.Add(subElimit);
                     }
+
+                    if (!testMode)
+                    {
+                        elimitBall._BombElimitBalls.Add(subElimit);
+                        if (subElimit._BombPrivite <= 0 || subElimit._BombPrivite > elimitBall._BombPrivite)
+                        {
+                            subElimit._BombPrivite = elimitBall._BombPrivite;
+                        }
+                    }
                 }
 
-                CheckSpElimitCircle(subElimitList, ref spElimitBalls);
+
+                CheckSpElimitCircle(subElimitList, ref spElimitBalls, false, testMode, deepth + 1);
             }
         }
     }
@@ -1274,7 +1446,8 @@ public class BallBox
 
     #region 
 
-
+    private int _BonrBallCnt = 0;
+    private List<int> _LastBornHPIdx = new List<int>();
     //public BallInfo FindFallBall(int x, int y)
     //{
     //    for (int j = y; j < _BallBoxInfo[0].Length; ++j)
@@ -1371,8 +1544,41 @@ public class BallBox
         ++_FillPath[x];
 
         var randomFall = new BallInfo(x, _FillPath[x]);
-        randomFall.SetRandomBall();
+        SetBornBall(randomFall);
         return randomFall;
+    }
+
+    private void SetBornBall(BallInfo ballInfo)
+    {
+        ++_BonrBallCnt;
+
+        int HPBallIdx = 25;
+        if (_MapRecord._HPBall.Count > 0)
+        {
+            if (_LastBornHPIdx.Count < _MapRecord._HPBall.Count)
+            {
+                HPBallIdx = _MapRecord._HPBall[_LastBornHPIdx.Count];
+            }
+            else
+            {
+                HPBallIdx = _MapRecord._HPBall[_MapRecord._HPBall.Count - 1];
+            }
+        }
+        int lastIdx = 0;
+        if (_LastBornHPIdx.Count > 0)
+        {
+            lastIdx = _LastBornHPIdx[_LastBornHPIdx.Count - 1];
+        }
+        if (_BonrBallCnt - lastIdx == HPBallIdx)
+        {
+            string hpBallInitStr = "301";
+            ballInfo.SetBallInitType(hpBallInitStr);
+            _LastBornHPIdx.Add(_BonrBallCnt);
+        }
+        else
+        {
+            ballInfo.SetRandomBall();
+        }
     }
 
     public List<ExchangeBalls> ElimitnateFall()
@@ -1427,6 +1633,21 @@ public class BallBox
     #endregion
 
     #region static
+
+    public static List<BallInfo> AddBallInfos(List<BallInfo> listA, BallInfo singleBall)
+    {
+        if (listA == null)
+        {
+            listA = new List<BallInfo>();
+        }
+
+        if (!listA.Contains(singleBall))
+        {
+            listA.Add(singleBall);
+        }
+        
+        return listA;
+    }
 
     public static List<BallInfo> AddBallInfos(List<BallInfo> listA, List<BallInfo> listB)
     {

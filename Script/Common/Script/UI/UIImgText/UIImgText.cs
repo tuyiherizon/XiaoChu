@@ -24,7 +24,7 @@ public class UIImgText : MonoBehaviour
     }
 
     protected Transform _CharRoot;
-    protected void InitCharRoot()
+    protected virtual void InitCharRoot()
     {
         if (_CharRoot != null)
             return;
@@ -87,7 +87,16 @@ public class UIImgText : MonoBehaviour
         _CharImages.Clear();
     }
 
-    protected void ShowImage(string text)
+    public void EditorClear()
+    {
+        for (int i = 0; i < _CharImages.Count; ++i)
+        {
+            GameObject.DestroyImmediate(_CharImages[i].gameObject);
+        }
+        _CharImages.Clear();
+    }
+
+    protected virtual void ShowImage(string text)
     {
         ClearImage();
         _ImgFont.InitChars();
@@ -101,6 +110,7 @@ public class UIImgText : MonoBehaviour
             }
             var charImg = _ImgFont._DictImgChars[text[i]];
             image.sprite = charImg._Image;
+            image.color = charImg._Color;
             image.rectTransform.sizeDelta = new Vector2(charImg._CharWidth, charImg._CharHeight);
             image.rectTransform.SetAsLastSibling();
 

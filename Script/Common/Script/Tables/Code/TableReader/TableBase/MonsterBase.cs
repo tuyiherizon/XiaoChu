@@ -21,6 +21,7 @@ namespace Tables
         public int Defence { get; set; }
         public int HP { get; set; }
         public ELEMENT_TYPE ElementType { get; set; }
+        public List<SkillBaseRecord> Skills { get; set; }
         public MonsterBaseRecord(DataRecord dataRecord)
         {
             if (dataRecord != null)
@@ -29,6 +30,7 @@ namespace Tables
                 Id = ValueStr[0];
 
             }
+            Skills = new List<SkillBaseRecord>();
         }
         public string[] GetRecordStr()
         {
@@ -42,6 +44,17 @@ namespace Tables
             recordStrList.Add(TableWriteBase.GetWriteStr(Defence));
             recordStrList.Add(TableWriteBase.GetWriteStr(HP));
             recordStrList.Add(((int)ElementType).ToString());
+            foreach (var testTableItem in Skills)
+            {
+                if (testTableItem != null)
+                {
+                    recordStrList.Add(testTableItem.Id);
+                }
+                else
+                {
+                    recordStrList.Add("");
+                }
+            }
 
             return recordStrList.ToArray();
         }
@@ -113,6 +126,27 @@ namespace Tables
                 pair.Value.Defence = TableReadBase.ParseInt(pair.Value.ValueStr[6]);
                 pair.Value.HP = TableReadBase.ParseInt(pair.Value.ValueStr[7]);
                 pair.Value.ElementType =  (ELEMENT_TYPE)TableReadBase.ParseInt(pair.Value.ValueStr[8]);
+                if (!string.IsNullOrEmpty(pair.Value.ValueStr[9]))
+                {
+                    pair.Value.Skills.Add( TableReader.SkillBase.GetRecord(pair.Value.ValueStr[9]));                }
+                else
+                {
+                    pair.Value.Skills.Add(null);
+                }
+                if (!string.IsNullOrEmpty(pair.Value.ValueStr[10]))
+                {
+                    pair.Value.Skills.Add( TableReader.SkillBase.GetRecord(pair.Value.ValueStr[10]));                }
+                else
+                {
+                    pair.Value.Skills.Add(null);
+                }
+                if (!string.IsNullOrEmpty(pair.Value.ValueStr[11]))
+                {
+                    pair.Value.Skills.Add( TableReader.SkillBase.GetRecord(pair.Value.ValueStr[11]));                }
+                else
+                {
+                    pair.Value.Skills.Add(null);
+                }
             }
         }
     }

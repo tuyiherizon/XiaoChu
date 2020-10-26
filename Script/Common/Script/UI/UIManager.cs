@@ -3,12 +3,10 @@ using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 
- 
 using System.IO;
 using System;
 using System.Reflection;
 using UnityEngine.UI;
-
 
 
 public class UIManager : MonoBehaviour
@@ -72,6 +70,15 @@ public class UIManager : MonoBehaviour
                 rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 rectTransform.localScale = Vector3.one;
                 rectTransform.sizeDelta = Vector2.zero;
+
+                layer.layer = 5;
+                var canvas = layer.AddComponent<Canvas>();
+                canvas.overrideSorting = true;
+                int layerID = (int)((UILayer)layerEnum);
+                canvas.sortingOrder = layerID * 10;
+
+                layer.AddComponent<GraphicRaycaster>();
+
                 _UILayers.Add(((UILayer)layerEnum), rectTransform);
             }
         }
@@ -130,6 +137,11 @@ public class UIManager : MonoBehaviour
 
     private Dictionary<string, UIBase> _UIObjs = new Dictionary<string, UIBase>();
     private Dictionary<UILayer, RectTransform> _UILayers = new Dictionary<UILayer, RectTransform>();
+
+    public RectTransform GetLayerTrans(UILayer uiLayer)
+    {
+        return _UILayers[uiLayer];
+    }
 
     public void ShowOrCreateUI(string uiPath, UILayer uilayer, Hashtable hashtable)
     {
@@ -296,6 +308,25 @@ public class UIManager : MonoBehaviour
         if (uilayer == UILayer.PopUI /*|| uilayer == UILayer.MessageUI*/)
         {
             HideLayer(uilayer);
+        }
+    }
+
+    #endregion
+
+    #region sound
+
+    public AudioSource _AndioSource;
+
+    public AudioSource AndioSource
+    {
+        get
+        {
+            if (_AndioSource == null)
+            {
+                _AndioSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            return _AndioSource;
         }
     }
 

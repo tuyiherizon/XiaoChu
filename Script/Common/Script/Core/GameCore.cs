@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
-
+using System.IO;
 
 /// <summary>
 /// 游戏核心
@@ -34,6 +35,7 @@ public class GameCore : MonoBehaviour
             LogicManager.Instance.CleanUpSave();
         }
 
+        TestStageUpdate();
 #endif
     }
 
@@ -147,7 +149,121 @@ public class GameCore : MonoBehaviour
 //#endif
     }
 
-#endregion
+    #endregion
+
+    #region test stage
+
+    public class TestStageInfo
+    {
+        public bool _IsWin;
+        public int _ElimitBall;
+        public int _ElimitTrap;
+        public int _ElimitBomb;
+        public int _RemainHP;
+        public int _Round;
+    }
+
+    private int _DefaultTestTimes = 10;
+    private int _TestTimes = 0;
+    private StageDataItem _TestingStage;
+    private int _CurIdx = 0;
+    private int _TargetIdx = 1;
+
+    private Dictionary<StageDataItem, List<TestStageInfo>> _TestInfos = new Dictionary<StageDataItem, List<TestStageInfo>>();
+
+    public void TestStage(StageDataItem stageItem)
+    {
+        _TestingStage = stageItem;
+        _TestInfos.Clear();
+        _TestInfos.Add(_TestingStage, new List<TestStageInfo>());
+        StageDataPack.Instance._FightingStage = _TestingStage;
+        LogicManager.Instance.EnterFight(_TestingStage);
+    }
+
+    public void TestStageUpdate()
+    {
+        if (_TestingStage == null)
+            return;
+
+        if (!UIFightBox.IsTestMode())
+        {
+            UIFightBox.SetTest();
+        }
+
+        if (UIStageSucess.IsShow() || UIStageFail.IsShow())
+        {
+            TestStageInfo testInfo = new TestStageInfo();
+            if (UIStageSucess.IsShow())
+            {
+                testInfo._IsWin = true;
+            }
+            else
+            {
+                testInfo._IsWin = false;
+            }
+            testInfo._Round = BattleField.Instance._BattleRound - 1;
+            testInfo._RemainHP = (int)(((float)BattleField.Instance._RoleMotion._HP / BattleField.Instance._RoleMotion._MaxHP) * 10);
+            testInfo._ElimitTrap = BallBox.Instance._ElimitTrapCnt;
+            testInfo._ElimitBomb = BallBox.Instance._ElimitBombCnt;
+
+            ++_TestTimes;
+            _TestInfos[_TestingStage].Add(testInfo);
+            LogicManager.Instance.ExitFight();
+
+            if (_TestTimes >= _DefaultTestTimes)
+            {
+                _TestTimes = 0;
+                //++_CurIdx;
+                //if (_CurIdx >= _TargetIdx)
+                {
+                    _TestingStage = null;
+                    WriteRecords();
+                }
+                //else
+                //{
+                //    _TestingStage = StageDataPack.Instance._StageItems[_CurIdx];
+                //    _TestInfos.Add(_TestingStage, new List<TestStageInfo>());
+                //    StageDataPack.Instance._FightingStage = _TestingStage;
+                //    LogicManager.Instance.EnterFight(_TestingStage);
+                //}
+            }
+            else
+            {
+                StageDataPack.Instance._FightingStage = _TestingStage;
+                LogicManager.Instance.EnterFight(_TestingStage);
+            }
+        }
+    }
+
+    public void WriteRecords()
+    {
+        string recordPath = Application.dataPath + "/../build/Records/StageTestAll.txt";
+        StreamWriter writerAll = File.AppendText(recordPath);
+
+        foreach (var testInfo in _TestInfos)
+        {
+            string testStagePath = Application.dataPath + "/../build/Records/StageTest" + "_" + testInfo.Key.StageID + ".txt";
+            StreamWriter writerSingle = new StreamWriter(testStagePath);
+
+            string winTag = testInfo.Key.StageID + "\t";
+            foreach (var testSingle in testInfo.Value)
+            {
+                int winFlag = testSingle._IsWin ? 1 : 0;
+                string testSingleInfo = winFlag + "\t" + testSingle._RemainHP + "\t" + testSingle._Round + "\t" + testSingle._ElimitBomb + "\t" + testSingle._ElimitTrap;
+                writerSingle.WriteLine(testSingleInfo);
+
+
+                winTag += winFlag.ToString() + "\t";
+
+            }
+            writerSingle.Close();
+            writerAll.WriteLine(winTag);
+        }
+
+        writerAll.Close();
+    }
+
+    #endregion
 
 }
 

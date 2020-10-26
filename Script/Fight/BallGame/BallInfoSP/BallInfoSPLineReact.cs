@@ -10,14 +10,23 @@ public class BallInfoSPLineReact : BallInfoSPLineBase
     {
         if (_ReactLineBalls.Count > 0)
         {
-            List<BallInfo> reactBalls = new List<BallInfo>();
-            foreach (var lineBall in _ReactLineBalls)
+            List<BallInfo> ballList = new List<BallInfo>();
+            foreach (var reactBall in _ReactLineBalls)
             {
-                reactBalls.Add(lineBall._BallInfo);
+                if(reactBall.BallInfo._BallInfoSP == reactBall)
+                    ballList.Add(reactBall.BallInfo);
             }
-            return reactBalls;
+            return ballList;
         }
         return null;
+    }
+
+    public static void RemoveReactBall(BallInfoSPLineReact reactGO)
+    {
+        if (_ReactLineBalls.Contains(reactGO))
+        {
+            _ReactLineBalls.Remove(reactGO);
+        }
     }
 
     public static void InitReactBalls()
@@ -71,7 +80,7 @@ public class BallInfoSPLineReact : BallInfoSPLineBase
 
     public override bool IsExplore()
     {
-        return true;
+        return false;
     }
 
     public override void OnNormalElimit()
@@ -112,6 +121,11 @@ public class BallInfoSPLineReact : BallInfoSPLineBase
         }
 
         _IsReactBall = false;
+
+        if (_ReactLineBalls.Contains(this))
+        {
+            _ReactLineBalls.Remove(this);
+        }
     }
     
 

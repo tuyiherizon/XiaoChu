@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BallInfoSPTrapClod : BallInfoSPBase
+public class BallInfoSPTrapClod : BallInfoSPTrapBase
 {
-    public int ElimitNum = 3;
-
+    
     public override bool IsCanExchange(BallInfo other)
     {
         return true;
@@ -50,7 +49,7 @@ public class BallInfoSPTrapClod : BallInfoSPBase
     public override void OnExplore()
     {
         ElimitNum -= 1;
-        if (ElimitNum < 0)
+        if (ElimitNum <= 0)
         {
             _BallInfo.SpRemove();
         }
@@ -59,7 +58,7 @@ public class BallInfoSPTrapClod : BallInfoSPBase
     public override void OnSPElimit()
     {
         ElimitNum -= BallBox.Instance._OptImpact._DamageToTrap;
-        if (ElimitNum < 0)
+        if (ElimitNum <= 0)
         {
             _BallInfo.SpRemove();
         }

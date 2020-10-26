@@ -9,9 +9,17 @@ public class UIBallInfoStone : UIBallInfo
     public Text _EarthNum;
 
     #region show
-    public override void ShowBallInfo(BallInfo ballInfo)
+    public override void ShowBallInfo(BallInfo ballInfo, bool isInner)
     {
-        int spNum = ((BallInfoSPTrapStone)ballInfo._BallInfoSP).ElimitNum;
+        int spNum = 0;
+        if (isInner)
+        {
+            spNum = ((BallInfoSPTrapStone)ballInfo._IncludeBallInfoSP).ElimitNum;
+        }
+        else
+        {
+            spNum = ((BallInfoSPTrapStone)ballInfo._BallInfoSP).ElimitNum;
+        }
         int showIdx = 0;
         if (spNum > 2)
         {

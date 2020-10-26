@@ -51,8 +51,11 @@ public class UILoadingTips : UIBase
     {
         base.Show(hash);
 
-        _DelayTime = (float)hash["DelayTime"];
-        ShowLast(_DelayTime);
+        if (hash.ContainsKey("DelayTime"))
+        {
+            _DelayTime = (float)hash["DelayTime"];
+            ShowLast(_DelayTime);
+        }
     }
 
     

@@ -4,6 +4,17 @@ namespace Tables
 {
 
     //
+    public enum ELEMENT_TYPE
+    {
+        NONE = 0, //None,枚举必须保留0值
+        FIRE = 1, //FIRE,FIRE
+        ICE = 2, //ICE,ICE
+        WIND = 3, //WIND,WIND
+        LIGHT = 4, //LIGHT,LIGHT
+        DARK = 5, //DARK,DARK
+    }
+
+    //
     public enum ITEM_QUALITY
     {
         WHITE = 0, //WHITE,枚举必须保留0值
@@ -21,17 +32,6 @@ namespace Tables
         DOUBLE_BOSS = 2, //DOUBLE_BOSS,DOUBLE_BOSS
         ACT_GOLD = 3, //ACT_GOLD,ACT_GOLD
         ACT_GEM = 4, //ACT_GEM,ACT_GEM
-    }
-
-    //
-    public enum ELEMENT_TYPE
-    {
-        NONE = 0, //None,枚举必须保留0值
-        FIRE = 1, //FIRE,FIRE
-        ICE = 2, //ICE,ICE
-        WIND = 3, //WIND,WIND
-        LIGHT = 4, //LIGHT,LIGHT
-        DARK = 5, //DARK,DARK
     }
 
 

@@ -15,13 +15,15 @@ namespace Tables
         public string Id { get; set; }
         public string Name { get; set; }
         public string Desc { get; set; }
+        public int Level { get; set; }
         public STAGE_TYPE StageType { get; set; }
         public string FightLogicPath { get; set; }
-        public List<string> ScenePath { get; set; }
-        public List<Vector3> CameraOffset { get; set; }
+        public string ScenePath { get; set; }
         public string Audio { get; set; }
-        public List<int> ExParam { get; set; }
         public string Icon { get; set; }
+        public string BG { get; set; }
+        public List<string> AwardType { get; set; }
+        public List<string> AwardValue { get; set; }
         public StageInfoRecord(DataRecord dataRecord)
         {
             if (dataRecord != null)
@@ -30,9 +32,8 @@ namespace Tables
                 Id = ValueStr[0];
 
             }
-            ScenePath = new List<string>();
-            CameraOffset = new List<Vector3>();
-            ExParam = new List<int>();
+            AwardType = new List<string>();
+            AwardValue = new List<string>();
         }
         public string[] GetRecordStr()
         {
@@ -40,22 +41,21 @@ namespace Tables
             recordStrList.Add(TableWriteBase.GetWriteStr(Id));
             recordStrList.Add(TableWriteBase.GetWriteStr(Name));
             recordStrList.Add(TableWriteBase.GetWriteStr(Desc));
+            recordStrList.Add(TableWriteBase.GetWriteStr(Level));
             recordStrList.Add(((int)StageType).ToString());
             recordStrList.Add(TableWriteBase.GetWriteStr(FightLogicPath));
-            foreach (var testTableItem in ScenePath)
-            {
-                recordStrList.Add(TableWriteBase.GetWriteStr(testTableItem));
-            }
-            foreach (var testTableItem in CameraOffset)
-            {
-                recordStrList.Add(TableWriteBase.GetWriteStr(testTableItem));
-            }
+            recordStrList.Add(TableWriteBase.GetWriteStr(ScenePath));
             recordStrList.Add(TableWriteBase.GetWriteStr(Audio));
-            foreach (var testTableItem in ExParam)
+            recordStrList.Add(TableWriteBase.GetWriteStr(Icon));
+            recordStrList.Add(TableWriteBase.GetWriteStr(BG));
+            foreach (var testTableItem in AwardType)
             {
                 recordStrList.Add(TableWriteBase.GetWriteStr(testTableItem));
             }
-            recordStrList.Add(TableWriteBase.GetWriteStr(Icon));
+            foreach (var testTableItem in AwardValue)
+            {
+                recordStrList.Add(TableWriteBase.GetWriteStr(testTableItem));
+            }
 
             return recordStrList.ToArray();
         }
@@ -121,23 +121,21 @@ namespace Tables
             {
                 pair.Value.Name = TableReadBase.ParseString(pair.Value.ValueStr[1]);
                 pair.Value.Desc = TableReadBase.ParseString(pair.Value.ValueStr[2]);
-                pair.Value.StageType =  (STAGE_TYPE)TableReadBase.ParseInt(pair.Value.ValueStr[3]);
-                pair.Value.FightLogicPath = TableReadBase.ParseString(pair.Value.ValueStr[4]);
-                pair.Value.ScenePath.Add(TableReadBase.ParseString(pair.Value.ValueStr[5]));
-                pair.Value.ScenePath.Add(TableReadBase.ParseString(pair.Value.ValueStr[6]));
-                pair.Value.ScenePath.Add(TableReadBase.ParseString(pair.Value.ValueStr[7]));
-                pair.Value.ScenePath.Add(TableReadBase.ParseString(pair.Value.ValueStr[8]));
-                pair.Value.ScenePath.Add(TableReadBase.ParseString(pair.Value.ValueStr[9]));
-                pair.Value.CameraOffset.Add(TableReadBase.ParseVector3(pair.Value.ValueStr[10]));
-                pair.Value.CameraOffset.Add(TableReadBase.ParseVector3(pair.Value.ValueStr[11]));
-                pair.Value.CameraOffset.Add(TableReadBase.ParseVector3(pair.Value.ValueStr[12]));
-                pair.Value.CameraOffset.Add(TableReadBase.ParseVector3(pair.Value.ValueStr[13]));
-                pair.Value.CameraOffset.Add(TableReadBase.ParseVector3(pair.Value.ValueStr[14]));
-                pair.Value.Audio = TableReadBase.ParseString(pair.Value.ValueStr[15]);
-                pair.Value.ExParam.Add(TableReadBase.ParseInt(pair.Value.ValueStr[16]));
-                pair.Value.ExParam.Add(TableReadBase.ParseInt(pair.Value.ValueStr[17]));
-                pair.Value.ExParam.Add(TableReadBase.ParseInt(pair.Value.ValueStr[18]));
-                pair.Value.Icon = TableReadBase.ParseString(pair.Value.ValueStr[19]);
+                pair.Value.Level = TableReadBase.ParseInt(pair.Value.ValueStr[3]);
+                pair.Value.StageType =  (STAGE_TYPE)TableReadBase.ParseInt(pair.Value.ValueStr[4]);
+                pair.Value.FightLogicPath = TableReadBase.ParseString(pair.Value.ValueStr[5]);
+                pair.Value.ScenePath = TableReadBase.ParseString(pair.Value.ValueStr[6]);
+                pair.Value.Audio = TableReadBase.ParseString(pair.Value.ValueStr[7]);
+                pair.Value.Icon = TableReadBase.ParseString(pair.Value.ValueStr[8]);
+                pair.Value.BG = TableReadBase.ParseString(pair.Value.ValueStr[9]);
+                pair.Value.AwardType.Add(TableReadBase.ParseString(pair.Value.ValueStr[10]));
+                pair.Value.AwardType.Add(TableReadBase.ParseString(pair.Value.ValueStr[11]));
+                pair.Value.AwardType.Add(TableReadBase.ParseString(pair.Value.ValueStr[12]));
+                pair.Value.AwardType.Add(TableReadBase.ParseString(pair.Value.ValueStr[13]));
+                pair.Value.AwardValue.Add(TableReadBase.ParseString(pair.Value.ValueStr[14]));
+                pair.Value.AwardValue.Add(TableReadBase.ParseString(pair.Value.ValueStr[15]));
+                pair.Value.AwardValue.Add(TableReadBase.ParseString(pair.Value.ValueStr[16]));
+                pair.Value.AwardValue.Add(TableReadBase.ParseString(pair.Value.ValueStr[17]));
             }
         }
     }

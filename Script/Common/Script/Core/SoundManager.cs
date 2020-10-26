@@ -6,6 +6,9 @@ public class SoundManager : MonoBehaviour
 {
     public AudioSource _AudioSource;
     public AudioClip _LogicAudio;
+    public AudioClip _FightAudio;
+    public AudioClip _BtnClickAudio;
+    public AudioClip _Sucess;
 
     void OnEnable()
     {

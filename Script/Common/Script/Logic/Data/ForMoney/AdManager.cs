@@ -56,6 +56,9 @@ public class AdManager:MonoBehaviour, IUnityAdsListener
 
     public void WatchAdVideo(Action finishCallBack)
     {
+        finishCallBack.Invoke();
+        return;
+
         _AdVideoCallBack = finishCallBack;
 
         //if (PlatformHelper.Instance.GetLocationPermission())

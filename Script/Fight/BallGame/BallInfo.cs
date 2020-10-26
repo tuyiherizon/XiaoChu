@@ -58,7 +58,11 @@ public enum BallType
     LineClumnAuto,
     LineCrossAuto,
     SPLineEnd,
-    
+
+    SPRPGStart = 300,
+    RPGHP = 301,
+    SPRPGEnd,
+
 }
 
 public class BallInfo
@@ -90,6 +94,20 @@ public class BallInfo
     }
     public BallInfoSPBase _BallInfoSP = null;
 
+    private BallType _IncludeBallSPType;
+    public BallType IncludeBallSPType
+    {
+        get
+        {
+            return _IncludeBallSPType;
+        }
+        set
+        {
+            _IncludeBallSPType = value;
+        }
+    }
+    public BallInfoSPBase _IncludeBallInfoSP = null;
+
     private Vector2 _Pos;
     public Vector2 Pos
     {
@@ -110,8 +128,30 @@ public class BallInfo
     public void Clear()
     {
         _BallType = BallType.None;
-        _BallSPType = BallType.None;
         _ElimitFlag = 0;
+        ClearSP();
+    }
+
+    public void ClearSP()
+    {
+        if (IsBombBall())
+        {
+            ++BallBox.Instance._ElimitBombCnt;
+        }
+
+        if (_BallInfoSP is BallInfoSPLineReact)
+        {
+            BallInfoSPLineReact.RemoveReactBall(_BallInfoSP as BallInfoSPLineReact);
+        }
+
+        if (_BallInfoSP is BallInfoSPBombAuto)
+        {
+            BallInfoSPBombAuto.AutoBombList.Remove(_BallInfoSP as BallInfoSPBombAuto);
+        }
+
+        
+
+        _BallSPType = BallType.None;
         _BallInfoSP = null;
     }
 
@@ -132,6 +172,31 @@ public class BallInfo
         return _BallType > BallType.NormalBallStart && _BallType < BallType.NormalBallEnd && _BallInfoSP == null;
     }
 
+    public bool IsTrapBall()
+    {
+        return _BallSPType > BallType.SPTrapStart && _BallSPType < BallType.SPTrapEnd && _BallInfoSP != null;
+    }
+
+    public bool IsBombBall()
+    {
+        return _BallSPType > BallType.SPBombStart && _BallSPType < BallType.SPLineEnd && _BallInfoSP != null;
+    }
+
+    public bool IsSPBomb()
+    {
+        return _BallSPType > BallType.SPBombStart && _BallSPType < BallType.SPBombEnd && _BallInfoSP != null;
+    }
+
+    public bool IsSPLine()
+    {
+        return _BallSPType > BallType.SPLineStart && _BallSPType < BallType.SPLineEnd && _BallInfoSP != null;
+    }
+
+    public bool IsRPGBall()
+    {
+        return _BallSPType > BallType.SPRPGStart && _BallSPType < BallType.SPRPGEnd && _BallInfoSP != null;
+    }
+
     public bool IsEquipNormal(BallInfo other)
     {
         if (other == null)
@@ -144,6 +209,11 @@ public class BallInfo
     public bool IsCanFillNormal()
     {
         if (_BallInfoSP != null && !_BallInfoSP.IsContentNormal())
+        {
+            return false;
+        }
+
+        if (_IncludeBallInfoSP != null && !_IncludeBallInfoSP.IsContentNormal())
         {
             return false;
         }
@@ -171,191 +241,236 @@ public class BallInfo
         else
         {
 
-            _BallSPType = (BallType)spType;
-            switch (_BallSPType)
+            BallType initType = (BallType)spType;
+            BallInfoSPBase initBall = GetBallInfoSP(initType, spArgs);
+
+            if (_BallInfoSP != null)
             {
-                case BallType.Ice:
-                    _BallInfoSP = new BallInfoSPTrapIce();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.Clod:
-                    _BallInfoSP = new BallInfoSPTrapClod();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.Stone:
-                    _BallInfoSP = new BallInfoSPTrapStone();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.Posion:
-                    _BallInfoSP = new BallInfoSPTrapPosion();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.Iron:
-                    _BallInfoSP = new BallInfoSPTrapIron();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombSmall1:
-                    _BallInfoSP = new BallInfoSPBombSmall();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombBig1:
-                    _BallInfoSP = new BallInfoSPBombBig();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombSmallEnlarge1:
-                    _BallInfoSP = new BallInfoSPBombSmallEnlarge();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombBigEnlarge:
-                    _BallInfoSP = new BallInfoSPBombBigEnlarge();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombSmallHitTrap:
-                    _BallInfoSP = new BallInfoSPBombSmallTrap();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombBigHitTrap:
-                    _BallInfoSP = new BallInfoSPBombBigTrap();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombSmallReact:
-                    _BallInfoSP = new BallInfoSPBombSmallReact();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombBigReact:
-                    _BallInfoSP = new BallInfoSPBombBigReact();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombSmallLighting:
-                    _BallInfoSP = new BallInfoSPBombSmallLighting();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombBigLighting:
-                    _BallInfoSP = new BallInfoSPBombBigLighting();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombSmallAuto:
-                    _BallInfoSP = new BallInfoSPBombSmallAuto();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.BombBigAuto:
-                    _BallInfoSP = new BallInfoSPBombBigAuto();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineRow:
-                    _BallInfoSP = new BallInfoSPLineRow();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineClumn:
-                    _BallInfoSP = new BallInfoSPLineClumn();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineCross:
-                    _BallInfoSP = new BallInfoSPLineCross();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineRowEnlarge:
-                    _BallInfoSP = new BallInfoSPLineRowEnlarge();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineClumnEnlarge:
-                    _BallInfoSP = new BallInfoSPLineClumnEnlarge();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineCrossEnlarge:
-                    _BallInfoSP = new BallInfoSPLineCrossEnlarge();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineRowHitTrap:
-                    _BallInfoSP = new BallInfoSPLineRowTrap();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineClumnHitTrap:
-                    _BallInfoSP = new BallInfoSPLineClumnTrap();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineCrossHitTrap:
-                    _BallInfoSP = new BallInfoSPLineCrossTrap();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineRowReact:
-                    _BallInfoSP = new BallInfoSPLineRowReact();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineClumnReact:
-                    _BallInfoSP = new BallInfoSPLineClumnReact();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineCrossReact:
-                    _BallInfoSP = new BallInfoSPLineCrossReact();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineRowLighting:
-                    _BallInfoSP = new BallInfoSPLineRowLighting();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineClumnLighting:
-                    _BallInfoSP = new BallInfoSPLineClumnLighting();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineCrossLighting:
-                    _BallInfoSP = new BallInfoSPLineCrossLighting();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineRowAuto:
-                    _BallInfoSP = new BallInfoSPLineRowAuto();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineClumnAuto:
-                    _BallInfoSP = new BallInfoSPLineClumnAuto();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
-                case BallType.LineCrossAuto:
-                    _BallInfoSP = new BallInfoSPLineCrossAuto();
-                    _BallInfoSP.SetBallInfo(this);
-                    _BallInfoSP.SetParam(spArgs);
-                    break;
+                if (_BallInfoSP.IsCanBeContentSP() && initBall.IsCanContentSP())
+                {
+                    _IncludeBallSPType = _BallSPType;
+                    _IncludeBallInfoSP = _BallInfoSP;
+                }
             }
 
+            _BallInfoSP = initBall;
+            _BallSPType = initType;
             if (!_BallInfoSP.IsContentNormal())
             {
                 SetBallType(BallType.None);
             }
         }
+    }
+
+    public void SetInterSP(string interInfo)
+    {
+        var spArgs = interInfo.Trim('(', ')').Split(';');
+
+        int spType = int.Parse(spArgs[0]);
+        if (!BallBox.IsTypeSP(spType))
+        {
+            _BallType = (BallType)spType;
+            SetBallType(_BallType);
+        }
+        else
+        {
+
+            BallType initType = (BallType)spType;
+            BallInfoSPBase initBall = GetBallInfoSP(initType, spArgs);
+
+            _IncludeBallInfoSP = initBall;
+            _IncludeBallSPType = initType;
+        }
+    }
+
+    private BallInfoSPBase GetBallInfoSP(BallType ballType, string[] spArgs)
+    {
+        BallInfoSPBase initBall = null;
+        switch (ballType)
+        {
+            case BallType.Ice:
+                initBall = new BallInfoSPTrapIce();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.Clod:
+                initBall = new BallInfoSPTrapClod();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.Stone:
+                initBall = new BallInfoSPTrapStone();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.Posion:
+                initBall = new BallInfoSPTrapPosion();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.Iron:
+                initBall = new BallInfoSPTrapIron();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombSmall1:
+                initBall = new BallInfoSPBombSmall();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombBig1:
+                initBall = new BallInfoSPBombBig();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombSmallEnlarge1:
+                initBall = new BallInfoSPBombSmallEnlarge();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombBigEnlarge:
+                initBall = new BallInfoSPBombBigEnlarge();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombSmallHitTrap:
+                initBall = new BallInfoSPBombSmallTrap();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombBigHitTrap:
+                initBall = new BallInfoSPBombBigTrap();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombSmallReact:
+                initBall = new BallInfoSPBombSmallReact();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombBigReact:
+                initBall = new BallInfoSPBombBigReact();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombSmallLighting:
+                initBall = new BallInfoSPBombSmallLighting();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombBigLighting:
+                initBall = new BallInfoSPBombBigLighting();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombSmallAuto:
+                initBall = new BallInfoSPBombSmallAuto();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.BombBigAuto:
+                initBall = new BallInfoSPBombBigAuto();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineRow:
+                initBall = new BallInfoSPLineRow();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineClumn:
+                initBall = new BallInfoSPLineClumn();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineCross:
+                initBall = new BallInfoSPLineCross();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineRowEnlarge:
+                initBall = new BallInfoSPLineRowEnlarge();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineClumnEnlarge:
+                initBall = new BallInfoSPLineClumnEnlarge();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineCrossEnlarge:
+                initBall = new BallInfoSPLineCrossEnlarge();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineRowHitTrap:
+                initBall = new BallInfoSPLineRowTrap();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineClumnHitTrap:
+                initBall = new BallInfoSPLineClumnTrap();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineCrossHitTrap:
+                initBall = new BallInfoSPLineCrossTrap();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineRowReact:
+                initBall = new BallInfoSPLineRowReact();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineClumnReact:
+                initBall = new BallInfoSPLineClumnReact();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineCrossReact:
+                initBall = new BallInfoSPLineCrossReact();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineRowLighting:
+                initBall = new BallInfoSPLineRowLighting();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineClumnLighting:
+                initBall = new BallInfoSPLineClumnLighting();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineCrossLighting:
+                initBall = new BallInfoSPLineCrossLighting();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineRowAuto:
+                initBall = new BallInfoSPLineRowAuto();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineClumnAuto:
+                initBall = new BallInfoSPLineClumnAuto();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.LineCrossAuto:
+                initBall = new BallInfoSPLineCrossAuto();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+            case BallType.RPGHP:
+                initBall = new BallInfoSPRPGHP();
+                initBall.SetBallInfo(this);
+                initBall.SetParam(spArgs);
+                break;
+        }
+
+        return initBall;
     }
 
     public void SetRandomBall()
@@ -367,6 +482,43 @@ public class BallInfo
         }
         int randomBall = Random.Range((int)(BallType.NormalBallStart) + 1, ballTypeEnd);
         _BallType = (BallType)randomBall;
+    }
+
+    public static BallType GetRandomBallType(List<BallType> exBalls)
+    {
+        List<int> randomTypes = new List<int>();
+
+        int ballTypeEnd = (int)BallType.NormalBallEnd;
+        if (!BallBox.Instance._IsContainEmptyNormal)
+        {
+            ballTypeEnd = (int)BallType.ColorEmpty;
+        }
+        for (int i = (int)(BallType.NormalBallStart) + 1; i < ballTypeEnd; ++i)
+        {
+            if (exBalls.Count == 0)
+            {
+                randomTypes.Add(i);
+            }
+            else
+            {
+                for (int j = 0; j < exBalls.Count; ++j)
+                {
+                    if ((int)exBalls[j] == i)
+                    {
+                        break;
+                    }
+
+                    if (j == exBalls.Count - 1)
+                    {
+                        randomTypes.Add(i);
+                    }
+                }
+            }
+        }
+
+        int randomIdx = Random.Range(0, randomTypes.Count);
+        var ballType = (BallType)randomTypes[randomIdx];
+        return ballType;
     }
 
     public void SetRandomBall(List<BallType> exBalls)
@@ -414,7 +566,18 @@ public class BallInfo
 
     #region opt
 
-    public int _BornRound = 0;
+    private int _BornRound = 0;
+    public int BornRound
+    {
+        get
+        {
+            return _BornRound;
+        }
+        set
+        {
+            _BornRound = value;
+        }
+    }
 
     public bool IsCanExChange(BallInfo other)
     {
@@ -446,9 +609,9 @@ public class BallInfo
         other.BallType = _BallType;
         _BallType = temp;
 
-        var tempRound = other._BornRound;
-        other._BornRound = _BornRound;
-        _BornRound = tempRound;
+        var tempRound = other.BornRound;
+        other.BornRound = BornRound;
+        BornRound = tempRound;
 
         if (_BallInfoSP != null && _BallInfoSP.IsExchangeSpInfo(other))
         {
@@ -504,6 +667,9 @@ public class BallInfo
 
     public bool IsCanNormalElimit(BallInfo other)
     {
+        if (other == null)
+            return false;
+
         if (_BallInfoSP != null && other._BallInfoSP != null)
         {
             if (!_BallInfoSP.IsCanNormalElimit() || !other._BallInfoSP.IsCanNormalElimit())
@@ -560,6 +726,7 @@ public class BallInfo
         if (_BallInfoSP != null)
         {
             _BallInfoSP.OnSPElimit();
+
             return;
         }
 
@@ -647,8 +814,58 @@ public class BallInfo
 
     public void SpRemove()
     {
+        if (_IncludeBallInfoSP != null)
+        {
+            if (_IncludeBallSPType > BallType.SPTrapStart && _IncludeBallSPType < BallType.SPTrapEnd)
+            {
+                ++BallBox.Instance._ElimitTrapCnt;
+            }
+
+            _BallInfoSP = _IncludeBallInfoSP;
+            _BallSPType = _IncludeBallSPType;
+
+            if (_IncludeBallInfoSP is BallInfoSPTrapPosion)
+            {
+                BallInfoSPTrapPosion._TrapPosionList.Remove(_IncludeBallInfoSP as BallInfoSPTrapPosion);
+            }
+
+            _IncludeBallInfoSP = null;
+            _IncludeBallSPType = BallType.None;
+
+            
+
+            return;
+        }
+
+        if (_BallSPType > BallType.SPTrapStart && _BallSPType < BallType.SPTrapEnd)
+        {
+            ++BallBox.Instance._ElimitTrapCnt;
+        }
+
+        if (_BallInfoSP is BallInfoSPTrapPosion)
+        {
+            BallInfoSPTrapPosion._TrapPosionList.Remove(_BallInfoSP as BallInfoSPTrapPosion);
+        }
+
         _BallInfoSP = null;
         _BallSPType = BallType.None;
+
+        
     }
+    #endregion
+
+    #region elimit info
+
+    public bool _IsBoomSP = false;
+    public List<BallInfo> _BombElimitBalls = new List<BallInfo>();
+    public int _BombPrivite = 0;
+
+    public void ClearElimitInfo()
+    {
+        _BombElimitBalls.Clear();
+        _BombPrivite = 0;
+        _IsBoomSP = false;
+    }
+
     #endregion
 }

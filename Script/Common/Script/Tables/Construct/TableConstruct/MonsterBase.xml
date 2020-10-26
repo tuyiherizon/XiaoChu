@@ -100,4 +100,15 @@
     <constructDefault>0</constructDefault>
     <constructRepeat>1</constructRepeat>
   </constructColumn>
+  <constructColumn>
+    <constructName>Skills</constructName>
+    <constructCode>Skills</constructCode>
+    <constructType1>表格索引</constructType1>
+    <constructType2>
+      <constructType2>SkillBase</constructType2>
+    </constructType2>
+    <constructDefault>
+    </constructDefault>
+    <constructRepeat>3</constructRepeat>
+  </constructColumn>
 </root>

@@ -1,10 +1,8 @@
 fileFormatVersion: 2
-guid: 18dcfbcb483bc40418ddc2795f99bc29
-timeCreated: 1465887289
-licenseType: Pro
+guid: 4eb43d0deb76af04ea7b665bd1f5db87
 NativeFormatImporter:
   externalObjects: {}
-  mainObjectFileID: 0
+  mainObjectFileID: 100100000
   userData: 
-  assetBundleName: ui/systemui/uilogin
-  assetBundleVariant: common
+  assetBundleName: 
+  assetBundleVariant: 

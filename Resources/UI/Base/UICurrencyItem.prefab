@@ -60,7 +60,7 @@ GameObject:
   m_Component:
   - component: {fileID: 22415836}
   - component: {fileID: 22284288}
-  - component: {fileID: 114000012476058288}
+  - component: {fileID: 114790023723943094}
   m_Layer: 5
   m_Name: UICurrencyItem
   m_TagString: Untagged
@@ -302,20 +302,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &114000012476058288
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 175218}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec598923d1181c64ab059eaa421f79c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  UIPath: 
-  _CurrencyIcon: {fileID: 11484136}
-  _CurrencyValue: {fileID: 11496030}
 --- !u!114 &114000012770588208
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -355,7 +341,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 114000012476058288}
+      - m_Target: {fileID: 0}
         m_MethodName: OnBtnAddClick
         m_Mode: 1
         m_Arguments:
@@ -428,6 +414,24 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: "\u62E5\u6709"
+--- !u!114 &114790023723943094
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 175218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3506049a8e898ee42a262ba9ac41d9af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UIPath: 
+  UILayer: 0
+  UINameText: {fileID: 0}
+  NameID: 0
+  _CurrencyIcon: {fileID: 11484136}
+  _CurrencyValue: {fileID: 11496030}
+  _CurrencySprite: []
 --- !u!222 &222000011422145406
 CanvasRenderer:
   m_ObjectHideFlags: 1

@@ -16,8 +16,14 @@ namespace Tables
         public string Name { get; set; }
         public string Desc { get; set; }
         public string Icon { get; set; }
+        public string SkillName { get; set; }
+        public string SkillDesc { get; set; }
+        public string SkillIcon { get; set; }
         public string NameDict { get; set; }
         public string Script { get; set; }
+        public int UnLockLevel { get; set; }
+        public int MaxLevel { get; set; }
+        public int Price { get; set; }
         public WeaponRecord(DataRecord dataRecord)
         {
             if (dataRecord != null)
@@ -34,8 +40,14 @@ namespace Tables
             recordStrList.Add(TableWriteBase.GetWriteStr(Name));
             recordStrList.Add(TableWriteBase.GetWriteStr(Desc));
             recordStrList.Add(TableWriteBase.GetWriteStr(Icon));
+            recordStrList.Add(TableWriteBase.GetWriteStr(SkillName));
+            recordStrList.Add(TableWriteBase.GetWriteStr(SkillDesc));
+            recordStrList.Add(TableWriteBase.GetWriteStr(SkillIcon));
             recordStrList.Add(TableWriteBase.GetWriteStr(NameDict));
             recordStrList.Add(TableWriteBase.GetWriteStr(Script));
+            recordStrList.Add(TableWriteBase.GetWriteStr(UnLockLevel));
+            recordStrList.Add(TableWriteBase.GetWriteStr(MaxLevel));
+            recordStrList.Add(TableWriteBase.GetWriteStr(Price));
 
             return recordStrList.ToArray();
         }
@@ -102,8 +114,14 @@ namespace Tables
                 pair.Value.Name = TableReadBase.ParseString(pair.Value.ValueStr[1]);
                 pair.Value.Desc = TableReadBase.ParseString(pair.Value.ValueStr[2]);
                 pair.Value.Icon = TableReadBase.ParseString(pair.Value.ValueStr[3]);
-                pair.Value.NameDict = TableReadBase.ParseString(pair.Value.ValueStr[4]);
-                pair.Value.Script = TableReadBase.ParseString(pair.Value.ValueStr[5]);
+                pair.Value.SkillName = TableReadBase.ParseString(pair.Value.ValueStr[4]);
+                pair.Value.SkillDesc = TableReadBase.ParseString(pair.Value.ValueStr[5]);
+                pair.Value.SkillIcon = TableReadBase.ParseString(pair.Value.ValueStr[6]);
+                pair.Value.NameDict = TableReadBase.ParseString(pair.Value.ValueStr[7]);
+                pair.Value.Script = TableReadBase.ParseString(pair.Value.ValueStr[8]);
+                pair.Value.UnLockLevel = TableReadBase.ParseInt(pair.Value.ValueStr[9]);
+                pair.Value.MaxLevel = TableReadBase.ParseInt(pair.Value.ValueStr[10]);
+                pair.Value.Price = TableReadBase.ParseInt(pair.Value.ValueStr[11]);
             }
         }
     }

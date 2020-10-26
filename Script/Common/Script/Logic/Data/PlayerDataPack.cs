@@ -30,67 +30,95 @@ public class PlayerDataPack : DataPackBase
     #endregion
 
     #region money
+
+    public const string MoneyGold = "10001";
+    public const string MoneyDiamond = "10002";
+    public const string MoneyGemFrag = "10003";
+
+    public class MoneyInfo
+    {
+        [SaveField(1)]
+        public string ID;
+        [SaveField(2)]
+        public int Value;
+    }
+
     [SaveField(1)]
-    private int _Gold = 0;
-    public int Gold
+    public List<MoneyInfo> _MoneyInfos;
+
+    public static bool IsMoney(string id)
     {
-        get
+        if (id.Equals(MoneyGold)
+            || id.Equals(MoneyDiamond)
+            || id.Equals(MoneyGemFrag))
+            return true;
+
+        return false;
+    }
+
+    public int GetMoney(string id)
+    {
+        var moneyInfo = GetMoneyInfo(id);
+
+        if (moneyInfo == null)
+            return 0;
+
+        return moneyInfo.Value;
+    }
+
+    public MoneyInfo GetMoneyInfo(string id)
+    {
+        var find = _MoneyInfos.Find((moneyInfo) =>
         {
-            return _Gold;
+            if (moneyInfo.ID == id)
+                return true;
+            return false;
+        });
+        return find;
+    }
+
+    public void AddMoney(string id, int value)
+    {
+        var moneyInfo = GetMoneyInfo(id);
+        if (moneyInfo == null)
+        {
+            moneyInfo = new MoneyInfo();
+            moneyInfo.ID = id;
+            moneyInfo.Value = value;
+            _MoneyInfos.Add(moneyInfo);
         }
-    }
-
-    [SaveField(2)]
-    private int _Diamond = 0;
-    public int Diamond
-    {
-        get
+        else
         {
-            return _Diamond;
+            moneyInfo.Value += value;
         }
+        SaveClass(true);
+
+        GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_REFRESH_MONEY, this, null);
     }
 
-    public void AddGold(int value)
+    public bool DecMoney(string id, int value)
     {
-        _Gold += value;
-        SaveClass(false);
-        UIMainFun.UpdateMoney();
-    }
-
-    public bool DecGold(int value)
-    {
-        if (_Gold < value)
+        var moneyInfo = GetMoneyInfo(id);
+        if (moneyInfo == null)
         {
-            UIMessageTip.ShowMessageTip(20000);
+            var commonitem = TableReader.CommonItem.GetRecord(id);
+            UIMessageTip.ShowMessageTip(StrDictionary.GetFormatStr(2001, StrDictionary.GetFormatStr(commonitem.NameStrDict)));
+            return false;
+        }
+        else if(moneyInfo.Value < value)
+        {
+            var commonitem = TableReader.CommonItem.GetRecord(id);
+            UIMessageTip.ShowMessageTip(StrDictionary.GetFormatStr(2001, StrDictionary.GetFormatStr(commonitem.NameStrDict)));
             return false;
         }
 
-        _Gold -= value;
-        SaveClass(false);
-        UIMainFun.UpdateMoney();
+        moneyInfo.Value -= value;
+        SaveClass(true);
+
+        GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_REFRESH_MONEY, this, null);
         return true;
     }
-
-    public void AddDiamond(int value)
-    {
-        _Diamond += value;
-        SaveClass(false);
-        UIMainFun.UpdateMoney();
-    }
-
-    public bool DecDiamond(int value)
-    {
-        if (_Diamond < value)
-        {
-            UIMessageTip.ShowMessageTip(20001);
-            return false;
-        }
-
-        _Diamond -= value;
-        SaveClass(false);
-        UIMainFun.UpdateMoney();
-        return true;
-    }
+    
     #endregion
 
     

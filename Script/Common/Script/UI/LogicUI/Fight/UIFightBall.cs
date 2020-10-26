@@ -31,6 +31,7 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
     void Update()
     {
         FallUpdate();
+        BombMoveUpdate();
     }
 
     #region show
@@ -40,6 +41,7 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
 
     public UIBallInfo _NormalBallInfo;
     public UIBallInfo _SPBallInfo;
+    public UIBallInfo _InnerSPBallInfo;
 
     public UIBallInfo _BallIce;
     public UIBallInfo _BallClod;
@@ -78,6 +80,7 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
     public UIBallInfo _BallLineRowAuto;
     public UIBallInfo _BallLineClumnAuto;
     public UIBallInfo _BallLineCrossAuto;
+    public UIBallInfo _BallRPGHP;
 
     private BallInfo _BallInfo;
     public BallInfo BallInfo
@@ -95,8 +98,11 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
 
     public void ShowBall()
     {
+        _FightBallAnchor.gameObject.SetActive(true);
         ShowNormal();
+        ShowSPInner();
         ShowSP();
+        _BombMoveVec = Vector2.zero;
     }
 
     private void ShowNormal()
@@ -104,6 +110,7 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
         if (_BallInfo == null)
             return;
 
+        _NormalBallInfo.SetBallNormalType(_BallInfo);
         _NormalBallInfo.ShowBallInfo(_BallInfo);
     }
 
@@ -111,8 +118,19 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
     {
         if (_SPBallInfo != null)
         {
+            _SPBallInfo.OnClearInfo();
             ResourcePool.Instance.RecvIldeUIItem(_SPBallInfo.gameObject);
             _SPBallInfo = null;
+        }
+    }
+
+    private void ClearInnerSpBall()
+    {
+        if (_InnerSPBallInfo != null)
+        {
+            _InnerSPBallInfo.OnClearInfo();
+            ResourcePool.Instance.RecvIldeUIItem(_InnerSPBallInfo.gameObject);
+            _InnerSPBallInfo = null;
         }
     }
 
@@ -131,129 +149,169 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
         }
 
         ClearSPBall();
-        switch (_BallInfo.BallSPType)
-        {
-            case BallType.Ice:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallIce.gameObject, _FightBallAnchor);
-                break;
-            case BallType.Clod:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallClod.gameObject, _FightBallAnchor);
-                break;
-            case BallType.Stone:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallStone.gameObject, _FightBallAnchor);
-                break;
-            case BallType.Posion:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallPosion.gameObject, _FightBallAnchor);
-                break;
-            case BallType.Iron:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallIron.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombSmall1:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallNormal.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombBig1:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigNormal.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombSmallEnlarge1:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallEnlarge.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombBigEnlarge:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigEnlarge.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombSmallHitTrap:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallHitTrap.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombBigHitTrap:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigHitTrap.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombSmallReact:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallReact.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombBigReact:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigReact.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombSmallLighting:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallLighting.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombBigLighting:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigLighting.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombSmallAuto:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallAuto.gameObject, _FightBallAnchor);
-                break;
-            case BallType.BombBigAuto:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigAuto.gameObject, _FightBallAnchor);
-                break;
 
-            case BallType.LineRow:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowNormal.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineClumn:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnNormal.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineCross:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossNormal.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineRowEnlarge:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowEnlarge.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineClumnEnlarge:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnEnlarge.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineCrossEnlarge:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossEnlarge.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineRowHitTrap:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowHitTrap.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineClumnHitTrap:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnHitTrap.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineCrossHitTrap:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossHitTrap.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineRowReact:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowReact.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineClumnReact:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnReact.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineCrossReact:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossReact.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineRowLighting:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowLighting.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineClumnLighting:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnLighting.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineCrossLighting:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossLighting.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineRowAuto:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowAuto.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineClumnAuto:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnAuto.gameObject, _FightBallAnchor);
-                break;
-            case BallType.LineCrossAuto:
-                _SPBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossAuto.gameObject, _FightBallAnchor);
-                break;
-            default:
-               
-                break;
-        }
+        _SPBallInfo = GetSPBallInfo(_BallInfo.BallSPType);
 
         if (_SPBallInfo != null)
         {
+            _SPBallInfo.SetBallSPType(_BallInfo);
             _SPBallInfo.ShowBallInfo(_BallInfo);
         }
     }
 
-    private void ResetRoot()
+    private void ShowSPInner()
     {
-        _FightBallAnchor.transform.SetParent(transform);
-        _FightBallAnchor.transform.localPosition = Vector3.zero;
+        if (_BallInfo == null || _BallInfo.IncludeBallSPType == BallType.None)
+        {
+            ClearInnerSpBall();
+            return;
+        }
+
+        if (_InnerSPBallInfo != null && _InnerSPBallInfo.BallSPType == _BallInfo.IncludeBallSPType)
+        {
+            _InnerSPBallInfo.ShowBallInfo(_BallInfo, true);
+            return;
+        }
+
+        ClearInnerSpBall();
+
+        _InnerSPBallInfo = GetSPBallInfo(_BallInfo.IncludeBallSPType);
+
+        if (_InnerSPBallInfo != null)
+        {
+            _InnerSPBallInfo.SetBallSPType(_BallInfo, true);
+            _InnerSPBallInfo.ShowBallInfo(_BallInfo, true);
+        }
+    }
+
+    private UIBallInfo GetSPBallInfo(BallType ballType)
+    {
+        UIBallInfo spBallInfo = null;
+        switch (ballType)
+        {
+            case BallType.Ice:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallIce.gameObject, _FightBallAnchor);
+                break;
+            case BallType.Clod:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallClod.gameObject, _FightBallAnchor);
+                break;
+            case BallType.Stone:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallStone.gameObject, _FightBallAnchor);
+                break;
+            case BallType.Posion:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallPosion.gameObject, _FightBallAnchor);
+                break;
+            case BallType.Iron:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallIron.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombSmall1:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallNormal.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombBig1:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigNormal.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombSmallEnlarge1:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallEnlarge.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombBigEnlarge:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigEnlarge.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombSmallHitTrap:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallHitTrap.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombBigHitTrap:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigHitTrap.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombSmallReact:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallReact.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombBigReact:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigReact.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombSmallLighting:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallLighting.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombBigLighting:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigLighting.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombSmallAuto:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombSmallAuto.gameObject, _FightBallAnchor);
+                break;
+            case BallType.BombBigAuto:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallBombBigAuto.gameObject, _FightBallAnchor);
+                break;
+
+            case BallType.LineRow:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowNormal.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineClumn:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnNormal.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineCross:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossNormal.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineRowEnlarge:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowEnlarge.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineClumnEnlarge:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnEnlarge.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineCrossEnlarge:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossEnlarge.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineRowHitTrap:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowHitTrap.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineClumnHitTrap:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnHitTrap.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineCrossHitTrap:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossHitTrap.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineRowReact:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowReact.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineClumnReact:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnReact.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineCrossReact:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossReact.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineRowLighting:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowLighting.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineClumnLighting:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnLighting.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineCrossLighting:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossLighting.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineRowAuto:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineRowAuto.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineClumnAuto:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineClumnAuto.gameObject, _FightBallAnchor);
+                break;
+            case BallType.LineCrossAuto:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallLineCrossAuto.gameObject, _FightBallAnchor);
+                break;
+
+            case BallType.RPGHP:
+                spBallInfo = ResourcePool.Instance.GetIdleUIItem<UIBallInfo>(_BallRPGHP.gameObject, _FightBallAnchor);
+                break;
+            default:
+
+                break;
+        }
+
+        return spBallInfo;
+    }
+
+    public void ResetRoot()
+    {
+        _FightBallAnchor.SetParent(transform);
+        _FightBallAnchor.position = transform.position;
+        //_FightBallAnchor.localPosition = Vector3.zero;
     }
 
     public void Exchange(UIFightBall otherBall)
@@ -274,14 +332,46 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
         ResetRoot();
     }
 
-    public void Elimit()
+    public float Elimit()
     {
-        //_FightBallAnchor._BallAnim.Play("BallExplore");
+        StartCoroutine(OnElimit());
+
+        return 0.2f * (BallInfo._BombPrivite - 1);
+    }
+
+    private IEnumerator OnElimit()
+    {
+        yield return new WaitForSeconds(0.2f * (BallInfo._BombPrivite - 1));
+
+        if (_SPBallInfo != null)
+        {
+            _SPBallInfo.OnElimit();
+        }
+        else
+        {
+            _NormalBallInfo.OnElimit();
+        }
     }
 
     public void Explore()
     {
         ShowSP();
+    }
+
+    public bool IsSPBallBomb()
+    {
+        if (_SPBallInfo == null)
+            return false;
+
+        return _SPBallInfo.BallSPType > BallType.SPBombStart && _SPBallInfo.BallSPType < BallType.SPBombEnd;
+    }
+
+    public bool IsSPBallLine()
+    {
+        if (_SPBallInfo == null)
+            return false;
+
+        return _SPBallInfo.BallSPType > BallType.SPLineStart && _SPBallInfo.BallSPType < BallType.SPLineEnd;
     }
 
     #endregion
@@ -360,6 +450,38 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
         }
         _FightBallAnchor.anchoredPosition = destPoint;
     }
+
+    public float _BombMoveSpeed = 3000;
+
+    private Vector2 _BombTargetPos;
+    private Vector2 _BombMoveVec = Vector2.zero;
+
+    public void BombMoveTo(UIFightBall targetBall)
+    {
+        _BombTargetPos = targetBall.transform.position;
+        Vector2 curPos = _FightBallAnchor.transform.position;
+        _BombMoveVec = _BombTargetPos - curPos;
+    }
+
+    public void BombMoveUpdate()
+    {
+        if (_BombMoveVec == Vector2.zero)
+            return;
+
+        Vector2 curPos = _FightBallAnchor.transform.position;
+        Vector2 moveVec = _BombMoveVec.normalized * _BombMoveSpeed * Time.fixedDeltaTime;
+
+        var destPoint = curPos + moveVec;
+        var delta = curPos - _BombTargetPos;
+        if (delta.magnitude < moveVec.magnitude)
+        {
+            destPoint = _TargetPos;
+            _BombMoveVec = Vector2.zero;
+            _FightBallAnchor.gameObject.SetActive(false);
+        }
+
+        _FightBallAnchor.transform.position = destPoint;
+    }
     
     #endregion
 
@@ -383,11 +505,12 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
 
     public void OnDrop(PointerEventData eventData)
     {
-        if (BallBox.Instance.IsCanMoveTo(_UIFightBox.DragBall.BallInfo, BallInfo))
-        {
-            _UIFightBox.ExChangeBalls(this, _UIFightBox.DragBall);
-        }
-        _UIFightBox.DragBall = null;
+        //if (BallBox.Instance.IsCanMoveTo(_UIFightBox.DragBall.BallInfo, BallInfo))
+        //{
+        //    Debug.Log("ballA._FightBallAnchor000:" + _UIFightBox.DragBall._FightBallAnchor.position + "," + _UIFightBox.DragBall.transform.position);
+        //    _UIFightBox.ExChangeBalls(this, _UIFightBox.DragBall);
+        //}
+        //_UIFightBox.DragBall = null;
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -400,7 +523,9 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
 
         if (BallBox.Instance.IsCanMoveTo(_UIFightBox.DragBall.BallInfo, BallInfo))
         {
-            _FightBallAnchor.transform.localScale = new Vector3(1.2f, 1.2f, 1.2f);
+            //_FightBallAnchor.transform.localScale = new Vector3(1.2f, 1.2f, 1.2f);
+            _UIFightBox.ExChangeBalls(this, _UIFightBox.DragBall);
+            _UIFightBox.DragBall = null;
         }
 
     }
@@ -412,6 +537,12 @@ public class UIFightBall : MonoBehaviour,IDragHandler,IEndDragHandler, IBeginDra
             _FightBallAnchor.transform.localScale = Vector3.one;
         }
     }
+
+    #endregion
+
+    #region sound
+
+    
 
     #endregion
 }

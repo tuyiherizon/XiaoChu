@@ -108,29 +108,32 @@ public class UINumInput : UIItemBase
 
     private void SetNumBtnState()
     {
-        if (_Value == _MaxValue)
+        if (_BtnAdd != null && _BtnDec != null)
         {
-            _BtnAdd.interactable = (false);
-            _BtnDec.interactable = (true);
+            if (_Value == _MaxValue)
+            {
+                _BtnAdd.interactable = (false);
+                _BtnDec.interactable = (true);
 
-            _BtnAdd.image.material.SetInt("IsGray", 1);
-            _BtnDec.image.material.SetInt("IsGray", 0);
-        }
-        else if (_Value == _MinValue)
-        {
-            _BtnAdd.interactable = (true);
-            _BtnDec.interactable = (false);
+                _BtnAdd.image.material.SetInt("IsGray", 1);
+                _BtnDec.image.material.SetInt("IsGray", 0);
+            }
+            else if (_Value == _MinValue)
+            {
+                _BtnAdd.interactable = (true);
+                _BtnDec.interactable = (false);
 
-            _BtnAdd.image.material.SetInt("IsGray", 0);
-            _BtnDec.image.material.SetInt("IsGray", 1);
-        }
-        else
-        {
-            _BtnAdd.interactable = (true);
-            _BtnDec.interactable = (true);
+                _BtnAdd.image.material.SetInt("IsGray", 0);
+                _BtnDec.image.material.SetInt("IsGray", 1);
+            }
+            else
+            {
+                _BtnAdd.interactable = (true);
+                _BtnDec.interactable = (true);
 
-            _BtnAdd.image.material.SetInt("IsGray", 0);
-            _BtnDec.image.material.SetInt("IsGray", 0);
+                _BtnAdd.image.material.SetInt("IsGray", 0);
+                _BtnDec.image.material.SetInt("IsGray", 0);
+            }
         }
     }
 

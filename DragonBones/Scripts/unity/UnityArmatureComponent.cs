@@ -101,6 +101,13 @@ namespace DragonBones
         [Range(0, 100)]
         [SerializeField]
         protected int _playTimes = 0;
+        public int PlayTimes
+        {
+            get
+            {
+                return _playTimes;
+            }
+        }
         [Range(-2f, 2f)]
         [SerializeField]
         protected float _timeScale = 1.0f;

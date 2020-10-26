@@ -3,15 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIBallInfoBombSmallReact : UIBallInfo
+public class UIBallInfoBombSmallReact : UIBallInfoBombBase
 {
     public GameObject _SPShowGO;
     public GameObject _SPShowReactGO;
 
     #region show
-    public override void ShowBallInfo(BallInfo ballInfo)
+    public override void ShowBallInfo(BallInfo ballInfo, bool isInner)
     {
-        var reactBall = (BallInfoSPBombSmallReact)ballInfo._BallInfoSP;
+        BallInfoSPBombSmallReact reactBall = null;
+
+        if (isInner)
+        {
+            reactBall = (BallInfoSPBombSmallReact)ballInfo._IncludeBallInfoSP;
+        }
+        else
+        {
+            reactBall = (BallInfoSPBombSmallReact)ballInfo._BallInfoSP;
+        }
         if (reactBall != null)
         {
             if (reactBall._IsReactBall)

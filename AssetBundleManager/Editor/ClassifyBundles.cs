@@ -130,16 +130,7 @@ public class ClassifyBundles : MonoBehaviour
             string sceneLogicBundleName = "FightSceneLogic/" + stageInfo.FightLogicPath;
             AddResourceDict(resBundels, sceneLogicPath, sceneLogicBundleName);
 
-            foreach (var sceneName in stageInfo.ScenePath)
-            {
-                if (string.IsNullOrEmpty(sceneName))
-                    continue;
 
-                if (sceneDict.ContainsKey(sceneName))
-                {
-                    AddResourceDict(resBundels, sceneDict[sceneName], "Scene/" + sceneName);
-                }
-            }
         }
         
     }

@@ -2,79 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BallInfoSPLineCrossTrap : BallInfoSPBase
+public class BallInfoSPLineCrossTrap : BallInfoSPLineBase
 {
 
-    public override bool IsCanExchange(BallInfo other)
-    {
-        return true;
-    }
-
-    public override bool IsExchangeSpInfo(BallInfo other)
-    {
-        return true;
-    }
-
-    public override bool IsCanNormalElimit()
-    {
-        return true;
-    }
-
-    public override bool IsCanBeSPElimit(BallInfo other)
-    {
-        return true;
-    }
-
-    public override bool IsContentNormal()
-    {
-        return true;
-    }
-
-    public override bool IsCanFall()
-    {
-        return true;
-    }
-
-    public override bool IsCanMove()
-    {
-        return true;
-    }
-
-    public override bool IsCanPass()
-    {
-        return true;
-    }
-
-    public override bool IsExplore()
-    {
-        return true;
-    }
-
-    public override void OnSPElimit()
-    {
-        _BallInfo.OnNormalElimit();
-    }
-
-    public override List<BallInfo> CheckSPElimit()
-    {
-        return GetBombBalls();
-    }
-
-    public override List<BallInfo> CheckSPMove(List<BallInfo> checkBalls)
-    {
-        //return GetBombBalls();
-        return null;
-    }
-
-    public override void SetParam(string[] param)
-    {
-        if (param.Length > 1)
-        {
-            _BallInfo.SetBallType((BallType)int.Parse(param[1]));
-        }
-    }
-
-    private List<BallInfo> GetBombBalls()
+    protected override List<BallInfo> GetBombBalls()
     {
         List<BallInfo> bombBalls = new List<BallInfo>();
 

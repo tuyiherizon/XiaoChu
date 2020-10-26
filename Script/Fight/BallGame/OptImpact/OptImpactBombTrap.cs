@@ -13,7 +13,7 @@ public class OptImpactBombTrap : OptImpactBase
     public override void SetElimitExtra(string spType, BallInfo optBall)
     {
         optBall.SetBallInitType(spType);
-        optBall._BornRound = BallBox.Instance._Round;
+        optBall.BornRound = BallBox.Instance._Round;
     }
 
     public override string GetExtraSpType(int rawCnt, int clumnCnt, BallInfo optBall)

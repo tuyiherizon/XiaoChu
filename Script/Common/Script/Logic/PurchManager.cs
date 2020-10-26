@@ -15,7 +15,7 @@ public class PurchManager
 #endif
 {
 
-#region 唯一
+    #region 唯一
 
     private static PurchManager _Instance = null;
     public static PurchManager Instance
@@ -52,28 +52,31 @@ public class PurchManager
 #endif
     }
 
-#endregion
+    #endregion
 
+
+
+    #region purch
 
 #if UNITY_PURCHASING
-#region purch
-
     private IStoreController controller;
     private IExtensionProvider extensions;
-
+#endif
     private Action _PurchCallback;
     private Dictionary<string, string> _ProductBundleID;
-         
+
 
     public void Purch(string idx, Action callBack)
     {
-        
+
 
         try
         {
             string bundleID = Tables.TableReader.Recharge.GetRecord(idx).BundleName;
             Debug.Log("Purch:" + bundleID);
+#if UNITY_PURCHASING
             controller.InitiatePurchase(bundleID);
+#endif
 
             _PurchCallback = callBack;
             //watch movie
@@ -112,7 +115,7 @@ public class PurchManager
             _PurchCallback.Invoke();
 
         var chargeRecord = Tables.TableReader.Recharge.GetRecord(idx);
-        PlayerDataPack.Instance.AddDiamond(chargeRecord.Num);
+        PlayerDataPack.Instance.AddMoney(PlayerDataPack.MoneyDiamond, chargeRecord.Num);
 
         Hashtable eventHash = new Hashtable();
         eventHash.Add("OrderID", idx);
@@ -121,6 +124,7 @@ public class PurchManager
         GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_IAP_SUCESS, this, eventHash);
     }
 
+#if UNITY_PURCHASING
     public void OnInitializeFailed(InitializationFailureReason error)
     {
         Debug.LogError("IAP OnInitializeFailed error:" + error.ToString());
@@ -189,17 +193,6 @@ public class PurchManager
 
         Debug.LogError("IAP OnInitialized");
     }
-
-#endregion
-#else
-    public void Purch(string idx, Action callBack)
-    {
-
-    }
-
-    public void PurchFinish(string idx)
-    {
-
-    }
 #endif
+    #endregion
 }

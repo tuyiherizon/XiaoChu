@@ -4,5 +4,6 @@ using UnityEngine;
 
 public class BallInfoSPBombAuto : BallInfoSPBase
 {
+    
     public static List<BallInfoSPBombAuto> AutoBombList = new List<BallInfoSPBombAuto>();
 }

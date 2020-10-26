@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
-
-
+using Tables;
+using System.IO;
 
 public class CommonDefine
 {
@@ -47,6 +47,62 @@ public class CommonDefine
         }
     }
 
+    public static string GetElementIcon(Tables.ELEMENT_TYPE elementType)
+    {
+        switch (elementType)
+        {
+            case Tables.ELEMENT_TYPE.FIRE:
+                return "box1";
+            case Tables.ELEMENT_TYPE.ICE:
+                return "box2";
+            case Tables.ELEMENT_TYPE.WIND:
+                return "box4";
+            case Tables.ELEMENT_TYPE.LIGHT:
+                return "box5";
+            case Tables.ELEMENT_TYPE.DARK:
+                return "box3";
+        }
+
+        return "";
+    }
+
+    public static string GetQualityIcon(Tables.ITEM_QUALITY quality)
+    {
+        switch (quality)
+        {
+            case Tables.ITEM_QUALITY.WHITE:
+                return "box1";
+            case Tables.ITEM_QUALITY.GREEN:
+                return "box2";
+            case Tables.ITEM_QUALITY.BLUE:
+                return "box4";
+            case Tables.ITEM_QUALITY.PURPER:
+                return "box5";
+            case Tables.ITEM_QUALITY.ORIGIN:
+                return "box3";
+        }
+
+        return "";
+    }
+
+    public static string GetQualityColorStr(ITEM_QUALITY quality)
+    {
+        switch (quality)
+        {
+            case ITEM_QUALITY.WHITE:
+                return "<color=#A5A5A5FF>";
+            case ITEM_QUALITY.GREEN:
+                return "<color=#10D200FF>";
+            case ITEM_QUALITY.BLUE:
+                return "<color=#3ba0ff>";
+            case ITEM_QUALITY.PURPER:
+                return "<color=#ca40e7>";
+            case ITEM_QUALITY.ORIGIN:
+                return "<color=#F0960EFF>";
+        }
+        return "<color=#ffffff>";
+    }
+
     /// <summary>
     /// color 转换hex
     /// </summary>
@@ -78,6 +134,37 @@ public class CommonDefine
         float b = bb / 255f;
         float a = cc / 255f;
         return new Color(r, g, b, a);
+    }
+
+    public static void CheckTargetPath(string targetPath)
+    {
+        targetPath = targetPath.Replace('\\', '/');
+
+        int dotPos = targetPath.LastIndexOf('.');
+        int lastPathPos = targetPath.LastIndexOf('/');
+
+        if (dotPos > 0 && lastPathPos < dotPos)
+        {
+            targetPath = targetPath.Substring(0, lastPathPos);
+        }
+        if (Directory.Exists(targetPath))
+        {
+            return;
+        }
+
+
+        string[] subPath = targetPath.Split('/');
+        string curCheckPath = "";
+        int subContentSize = subPath.Length;
+        for (int i = 0; i < subContentSize; i++)
+        {
+            curCheckPath += subPath[i] + '/';
+            if (!Directory.Exists(curCheckPath))
+            {
+                Directory.CreateDirectory(curCheckPath);
+            }
+        }
+
     }
 }
 

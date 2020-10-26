@@ -39,6 +39,16 @@
     <constructRepeat>1</constructRepeat>
   </constructColumn>
   <constructColumn>
+    <constructName>Level</constructName>
+    <constructCode>Level</constructCode>
+    <constructType1>基本类型</constructType1>
+    <constructType2>
+      <constructType2>整数</constructType2>
+    </constructType2>
+    <constructDefault>0</constructDefault>
+    <constructRepeat>1</constructRepeat>
+  </constructColumn>
+  <constructColumn>
     <constructName>StageType</constructName>
     <constructCode>StageType</constructCode>
     <constructType1>自定义枚举</constructType1>
@@ -68,17 +78,7 @@
     </constructType2>
     <constructDefault>
     </constructDefault>
-    <constructRepeat>5</constructRepeat>
-  </constructColumn>
-  <constructColumn>
-    <constructName>CameraOffset</constructName>
-    <constructCode>CameraOffset</constructCode>
-    <constructType1>基本类型</constructType1>
-    <constructType2>
-      <constructType2>三元组</constructType2>
-    </constructType2>
-    <constructDefault>0;0;0</constructDefault>
-    <constructRepeat>5</constructRepeat>
+    <constructRepeat>1</constructRepeat>
   </constructColumn>
   <constructColumn>
     <constructName>Audio</constructName>
@@ -92,16 +92,6 @@
     <constructRepeat>1</constructRepeat>
   </constructColumn>
   <constructColumn>
-    <constructName>ExParam</constructName>
-    <constructCode>ExParam</constructCode>
-    <constructType1>基本类型</constructType1>
-    <constructType2>
-      <constructType2>整数</constructType2>
-    </constructType2>
-    <constructDefault>0</constructDefault>
-    <constructRepeat>3</constructRepeat>
-  </constructColumn>
-  <constructColumn>
     <constructName>Icon</constructName>
     <constructCode>Icon</constructCode>
     <constructType1>基本类型</constructType1>
@@ -111,5 +101,38 @@
     <constructDefault>
     </constructDefault>
     <constructRepeat>1</constructRepeat>
+  </constructColumn>
+  <constructColumn>
+    <constructName>BG</constructName>
+    <constructCode>BG</constructCode>
+    <constructType1>基本类型</constructType1>
+    <constructType2>
+      <constructType2>字符串</constructType2>
+    </constructType2>
+    <constructDefault>
+    </constructDefault>
+    <constructRepeat>1</constructRepeat>
+  </constructColumn>
+  <constructColumn>
+    <constructName>AwardType</constructName>
+    <constructCode>AwardType</constructCode>
+    <constructType1>基本类型</constructType1>
+    <constructType2>
+      <constructType2>字符串</constructType2>
+    </constructType2>
+    <constructDefault>
+    </constructDefault>
+    <constructRepeat>4</constructRepeat>
+  </constructColumn>
+  <constructColumn>
+    <constructName>AwardValue</constructName>
+    <constructCode>AwardValue</constructCode>
+    <constructType1>基本类型</constructType1>
+    <constructType2>
+      <constructType2>字符串</constructType2>
+    </constructType2>
+    <constructDefault>
+    </constructDefault>
+    <constructRepeat>4</constructRepeat>
   </constructColumn>
 </root>

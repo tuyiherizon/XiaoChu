@@ -47,6 +47,11 @@ public class BallInfoSPLineBase : BallInfoSPBase
 
     public override bool IsExplore()
     {
+        return false;
+    }
+
+    public override bool IsCanBeContentSP()
+    {
         return true;
     }
 
@@ -76,6 +81,9 @@ public class BallInfoSPLineBase : BallInfoSPBase
 
     protected bool IsPosBlock(BallInfo ballInfo)
     {
+        if (ballInfo == null)
+            return false;
+
         if (ballInfo.BallSPType == BallType.Clod
             || ballInfo.BallSPType == BallType.Ice
             || ballInfo.BallSPType == BallType.Iron

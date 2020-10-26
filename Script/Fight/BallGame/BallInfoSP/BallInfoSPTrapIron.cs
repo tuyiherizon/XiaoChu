@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BallInfoSPTrapIron : BallInfoSPBase
+public class BallInfoSPTrapIron : BallInfoSPTrapBase
 {
-    public int ElimitNum = 3;
+    
 
     public override bool IsCanExchange(BallInfo other)
     {

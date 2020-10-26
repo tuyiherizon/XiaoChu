@@ -22,6 +22,7 @@ public class UIBase : MonoBehaviour
         {
             UINameText.text = Tables.StrDictionary.GetFormatStr(NameID);
         }
+        InitButtonSound();
     }
 
     #endregion
@@ -69,6 +70,34 @@ public class UIBase : MonoBehaviour
     public virtual void Destory()
     {
         UIManager.Instance.DestoryUI(UIPath);
+    }
+
+    #endregion
+
+    #region sound
+
+    public void InitButtonSound()
+    {
+        Button[] btns = GetComponentsInChildren<Button>();
+        for (int i = 0; i < btns.Length; i++)
+        {
+            Button btnChild = btns[i];
+            btnChild.onClick.RemoveListener(OnBtnClickSound);
+            btnChild.onClick.AddListener(OnBtnClickSound);
+        }
+    }
+
+    public virtual void OnBtnClickSound()
+    {
+        PlayerUISound(GameCore.Instance._SoundManager._BtnClickAudio);
+    }
+
+    public virtual void PlayerUISound(AudioClip logicAudio, float volumn = 0.5f)
+    {
+        UIManager.Instance.AndioSource.clip = (logicAudio);
+        UIManager.Instance.AndioSource.volume = volumn;
+        UIManager.Instance.AndioSource.loop = false;
+        UIManager.Instance.AndioSource.Play();
     }
 
 

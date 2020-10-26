@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BallInfoSPTrapPosion : BallInfoSPBase
+public class BallInfoSPTrapPosion : BallInfoSPTrapBase
 {
-    static List<BallInfoSPTrapPosion> _TrapPosionList = new List<BallInfoSPTrapPosion>();
+    public static List<BallInfoSPTrapPosion> _TrapPosionList = new List<BallInfoSPTrapPosion>();
     static bool _IsRoundHitPosion = false;
-    public int ElimitNum = 3;
+    
 
     public override bool IsCanExchange(BallInfo other)
     {
@@ -52,7 +52,7 @@ public class BallInfoSPTrapPosion : BallInfoSPBase
     public override void OnExplore()
     {
         ElimitNum -= 1;
-        if (ElimitNum < 0)
+        if (ElimitNum <= 0)
         {
             _BallInfo.SpRemove();
             _TrapPosionList.Remove(this);
@@ -63,7 +63,7 @@ public class BallInfoSPTrapPosion : BallInfoSPBase
     public override void OnSPElimit()
     {
         ElimitNum -= BallBox.Instance._OptImpact._DamageToTrap;
-        if (ElimitNum < 0)
+        if (ElimitNum <= 0)
         {
             _BallInfo.SpRemove();
             _TrapPosionList.Remove(this);
@@ -100,14 +100,31 @@ public class BallInfoSPTrapPosion : BallInfoSPBase
         if (_TrapPosionList.Count == 0)
             return null;
 
-        var canPosBall = GetCanPosionPos();
-        int random = Random.Range(0, canPosBall.Count);
+        BallInfoSPTrapPosion enhanceTrap = null;
+        foreach (var posionTrap in _TrapPosionList)
+        {
+            if (posionTrap.ElimitNum < 2)
+            {
+                enhanceTrap = posionTrap;
+            }
+        }
 
-        string ballType = (int)BallType.Posion + "," + 1;
-        canPosBall[random].SetBallInitType(ballType);
-        _IsRoundHitPosion = false;
+        if (enhanceTrap != null)
+        {
+            ++enhanceTrap.ElimitNum;
+            return new List<BallInfo>() { enhanceTrap.BallInfo };
+        }
+        else
+        {
+            var canPosBall = GetCanPosionPos();
+            int random = Random.Range(0, canPosBall.Count);
 
-        return new List<BallInfo>() { canPosBall[random] };
+            string ballType = (int)BallType.Posion + "," + 1;
+            canPosBall[random].SetBallInitType(ballType);
+            _IsRoundHitPosion = false;
+
+            return new List<BallInfo>() { canPosBall[random] };
+        }
     }
 
     public static List<BallInfo> GetCanPosionPos()

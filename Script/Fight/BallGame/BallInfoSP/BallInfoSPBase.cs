@@ -69,6 +69,16 @@ public class BallInfoSPBase
         return false;
     }
 
+    public virtual bool IsCanContentSP()
+    {
+        return false;
+    }
+
+    public virtual bool IsCanBeContentSP()
+    {
+        return true;
+    }
+
     public virtual void OnExplore()
     {
         

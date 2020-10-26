@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BallInfoSPTrapIce : BallInfoSPBase
+public class BallInfoSPTrapIce : BallInfoSPTrapBase
 {
-    public int ElimitNum = 3;
 
     public override bool IsCanExchange(BallInfo other)
     {
@@ -46,10 +45,15 @@ public class BallInfoSPTrapIce : BallInfoSPBase
         return true;
     }
 
+    public override bool IsCanContentSP()
+    {
+        return true;
+    }
+
     public override void OnExplore()
     {
         ElimitNum -= 1;
-        if (ElimitNum < 0)
+        if (ElimitNum <= 0)
         {
             _BallInfo.SpRemove();
         }
@@ -58,7 +62,7 @@ public class BallInfoSPTrapIce : BallInfoSPBase
     public override void OnSPElimit()
     {
         ElimitNum -= BallBox.Instance._OptImpact._DamageToTrap;
-        if (ElimitNum < 0)
+        if (ElimitNum <= 0)
         {
             _BallInfo.SpRemove();
         }
@@ -69,6 +73,10 @@ public class BallInfoSPTrapIce : BallInfoSPBase
         if (param.Length > 1)
         {
             ElimitNum = int.Parse(param[1]);
+        }
+        if (param.Length > 2)
+        {
+            BallInfo.SetInterSP(param[2]);
         }
     }
 }

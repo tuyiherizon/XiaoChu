@@ -29,34 +29,27 @@ public class ResourcePool : InstanceBase<ResourcePool>
 
     #region effect
 
-    public List<EffectController> _CommonHitEffect;
+    public Dictionary<string, EffectController> _CommonHitEffect;
 
     public Dictionary<string, EffectController> _LoadedEffects = new Dictionary<string, EffectController>();
 
     private Dictionary<string, Stack<EffectController>> _IdleEffects = new Dictionary<string, Stack<EffectController>>();
 
-
+    public static string LineEffectName = "UI/EffectLine";
+    public static string BombEffectName = "UI/EffectBomb";
+    public static string LightEffectName = "UI/EffectLight";
+    public static string HPBombName = "UI/EffectHpBomb";
 
     private void InitEffect()
     {
         if (_CommonHitEffect != null)
             return;
 
-        _CommonHitEffect = new List<EffectController>();
-        ResourceManager.Instance.LoadPrefab("Effect/Hit/Effect_Dead_A_Hit", InitEffectCallBack, null);
-
-        ResourceManager.Instance.LoadPrefab("Effect/Hit/Effect_Dead_B_Hit", InitEffectCallBack, null);
-
-        ResourceManager.Instance.LoadPrefab("Effect/Hit/Effect_Blade_Red", InitEffectCallBack, null);
-
-        ResourceManager.Instance.LoadPrefab("Effect/Hit/Hit_Fire", InitEffectCallBack, null);
-
-        ResourceManager.Instance.LoadPrefab("Effect/Hit/Hit_Ice", InitEffectCallBack, null);
-
-        ResourceManager.Instance.LoadPrefab("Effect/Hit/Hit_Light", InitEffectCallBack, null);
-
-        ResourceManager.Instance.LoadPrefab("Effect/Hit/Hit_Wind", InitEffectCallBack, null);
-        
+        _CommonHitEffect = new Dictionary<string, EffectController>();
+        LoadEffect(LineEffectName, (effectName, effectGo, callBackHash) => { }, null);
+        LoadEffect(BombEffectName, (effectName, effectGo, callBackHash) => { }, null);
+        LoadEffect(LightEffectName, (effectName, effectGo, callBackHash) => { }, null);
+        LoadEffect(HPBombName, (effectName, effectGo, callBackHash) => { }, null);
     }
 
     public void LoadEffect(string effectRes, LoadBundleAssetCallback<EffectController> callBack, Hashtable hash)
@@ -76,6 +69,15 @@ public class ResourcePool : InstanceBase<ResourcePool>
             _LoadedEffects.Add(effectRes, effct);
             callBack.Invoke(effectRes, _LoadedEffects[effectRes], callBackHash);
         }, hash);
+    }
+
+    public EffectController GetIdleEffect(string name)
+    {
+        if (_LoadedEffects.ContainsKey(name))
+        {
+            return GetIdleEffect(_LoadedEffects[name]);
+        }
+        return null;
     }
 
     public EffectController GetIdleEffect(EffectController effct)
@@ -148,7 +150,7 @@ public class ResourcePool : InstanceBase<ResourcePool>
 
     private void InitEffectCallBack(string uiName, GameObject effectGO, Hashtable hashtable)
     {
-        _CommonHitEffect.Add(effectGO.GetComponent<EffectController>());
+        _CommonHitEffect.Add(uiName, effectGO.GetComponent<EffectController>());
         effectGO.SetActive(false);
         effectGO.transform.SetParent(transform);
         effectGO.transform.localPosition = Vector3.zero;
@@ -214,6 +216,81 @@ public class ResourcePool : InstanceBase<ResourcePool>
 
     #endregion
 
+    #region model
+
+    private Dictionary<string, Stack<GameObject>> _IdleModelItems = new Dictionary<string, Stack<GameObject>>();
+
+    public void LoadModel(string modelName, LoadBundleAssetCallback<GameObject> callBack, Hashtable hash)
+    {
+        if (_IdleModelItems.ContainsKey(modelName))
+        {
+            var instance = PopIdleModel(modelName);
+            callBack.Invoke(modelName, instance, hash);
+            return;
+        }
+
+        string modelPath = "Model/" + modelName;
+        ResourceManager.Instance.LoadPrefab(modelPath, (resName, modelGO, callBackHash) =>
+        {
+            modelGO.transform.SetParent(transform);
+            modelGO.name = modelName;
+            _IdleModelItems.Add(modelName, new Stack<GameObject>());
+            _IdleModelItems[modelName].Push(modelGO);
+            var instance = PopIdleModel(modelName);
+            callBack.Invoke(modelName, instance, hash);
+        }, hash);
+    }
+
+    public GameObject PopIdleModel(string modelName)
+    {
+        if (!_IdleModelItems.ContainsKey(modelName))
+            return null;
+
+        if (_IdleModelItems[modelName].Count == 1)
+        {
+            GameObject lastModel = _IdleModelItems[modelName].Peek();
+            GameObject instance = GameObject.Instantiate(lastModel);
+            instance.name = lastModel.name;
+            instance.gameObject.SetActive(true);
+            return instance;
+        }
+        else
+        {
+            var instance = _IdleModelItems[modelName].Pop();
+            instance.gameObject.SetActive(true);
+            return instance;
+        }
+    }
+
+    public void RecvIldeModelItem(GameObject itemBase)
+    {
+        string itemName = itemBase.name.Replace("(Clone)", "");
+        if (!_IdleModelItems.ContainsKey(itemName))
+        {
+            _IdleModelItems.Add(itemName, new Stack<GameObject>());
+        }
+        itemBase.gameObject.SetActive(false);
+        itemBase.transform.SetParent(transform);
+        if (!_IdleModelItems[itemName].Contains(itemBase))
+        {
+            _IdleModelItems[itemName].Push(itemBase);
+        }
+    }
+
+    public void ClearModelItems()
+    {
+        foreach (var idleResKeys in _IdleModelItems.Values)
+        {
+            foreach (var idleRes in idleResKeys)
+            {
+                GameObject.Destroy(idleRes);
+            }
+        }
+        _IdleModelItems = new Dictionary<string, Stack<GameObject>>();
+    }
+
+    #endregion
+
     #region audio
 
     public Dictionary<int, AudioClip> _CommonAudio;
@@ -225,145 +302,106 @@ public class ResourcePool : InstanceBase<ResourcePool>
             return;
 
         _CommonAudio = new Dictionary<int, AudioClip>();
-        //var audio1 = ResourceManager.Instance.GetAudioClip("common/HitArmor");
-        //_CommonAudio.Add(0, audio1);
-        ResourceManager.Instance.LoadAudio("common/HitArmor", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(0, resData);
-        }, null);
+ 
+        //ResourceManager.Instance.LoadAudio("common/HitArmor", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(0, resData);
+        //}, null);
 
-        //var audio2 = ResourceManager.Instance.GetAudioClip("common/HitSwordNone");
-        //_CommonAudio.Add(1,audio2);
-        ResourceManager.Instance.LoadAudio("common/HitSwordNone", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(1, resData);
-        }, null);
-
-        //var audio3 = ResourceManager.Instance.GetAudioClip("common/HitSwordBody");
-        //_CommonAudio.Add(2,audio3);
-        ResourceManager.Instance.LoadAudio("common/HitSwordBody", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(2, resData);
-        }, null);
-
-        //var audio4 = ResourceManager.Instance.GetAudioClip("common/HitSwordSlap");
-        //_CommonAudio.Add(3,audio4);
-        ResourceManager.Instance.LoadAudio("common/HitSwordSlap", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(3, resData);
-        }, null);
-
-        //var audio5 = ResourceManager.Instance.GetAudioClip("common/HitSwordSlap2");
-        //_CommonAudio.Add(4,audio5);
-        ResourceManager.Instance.LoadAudio("common/HitSwordSlap2", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(4, resData);
-        }, null);
-
-        //var audio10 = ResourceManager.Instance.GetAudioClip("common/HitHwNone");
-        //_CommonAudio.Add(10, audio10);
-        ResourceManager.Instance.LoadAudio("common/HitHwNone", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(10, resData);
-        }, null);
-
-        //var audio11 = ResourceManager.Instance.GetAudioClip("common/HitHwBody");
-        //_CommonAudio.Add(11, audio11);
-        ResourceManager.Instance.LoadAudio("common/HitHwBody", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(11, resData);
-        }, null);
-
-        //var audio12 = ResourceManager.Instance.GetAudioClip("common/HwAtk");
-        //_CommonAudio.Add(12, audio12);
-        ResourceManager.Instance.LoadAudio("common/HwAtk", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(12, resData);
-        }, null);
-
-        //var audioEle = ResourceManager.Instance.GetAudioClip("common/AtkFire");
-        //_CommonAudio.Add(100, audioEle);
-        ResourceManager.Instance.LoadAudio("common/AtkFire", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(100, resData);
-        }, null);
-
-        //audioEle = ResourceManager.Instance.GetAudioClip("common/AtkIce");
-        //_CommonAudio.Add(101, audioEle);
-        ResourceManager.Instance.LoadAudio("common/AtkIce", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(101, resData);
-        }, null);
-
-        //audioEle = ResourceManager.Instance.GetAudioClip("common/AtkLighting");
-        //_CommonAudio.Add(102, audioEle);
-        ResourceManager.Instance.LoadAudio("common/AtkLighting", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(102, resData);
-        }, null);
-
-        //audioEle = ResourceManager.Instance.GetAudioClip("common/AtkStone");
-        //_CommonAudio.Add(103, audioEle);
-        ResourceManager.Instance.LoadAudio("common/AtkStone", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(103, resData);
-        }, null);
-
-        //audioEle = ResourceManager.Instance.GetAudioClip("common/AtkWind");
-        //_CommonAudio.Add(104, audioEle);
-        ResourceManager.Instance.LoadAudio("common/AtkWind", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(104, resData);
-        }, null);
-
-        //audioEle = ResourceManager.Instance.GetAudioClip("common/HitFire");
-        //_CommonAudio.Add(110, audioEle);
-        ResourceManager.Instance.LoadAudio("common/HitFire", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(110, resData);
-        }, null);
-
-        //audioEle = ResourceManager.Instance.GetAudioClip("common/HitIce");
-        //_CommonAudio.Add(111, audioEle);
-        ResourceManager.Instance.LoadAudio("common/HitFire", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(111, resData);
-        }, null);
-
-        //audioEle = ResourceManager.Instance.GetAudioClip("common/HitLighting");
-        //_CommonAudio.Add(112, audioEle);
-        ResourceManager.Instance.LoadAudio("common/HitLighting", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(112, resData);
-        }, null);
-
-        //audioEle = ResourceManager.Instance.GetAudioClip("common/HitStone");
-        //_CommonAudio.Add(113, audioEle);
-        ResourceManager.Instance.LoadAudio("common/HitStone", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(113, resData);
-        }, null);
-
-        //audioEle = ResourceManager.Instance.GetAudioClip("common/HitWind");
-        //_CommonAudio.Add(114, audioEle);
-        ResourceManager.Instance.LoadAudio("common/HitWind", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(114, resData);
-        }, null);
-
-        //audioEle = ResourceManager.Instance.GetAudioClip("common/AtkFire2");
-        //_CommonAudio.Add(120, audioEle);
-        ResourceManager.Instance.LoadAudio("common/AtkFire2", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(120, resData);
-        }, null);
-
-        //var audioMon = ResourceManager.Instance.GetAudioClip("common/AtkBow");
-        //_CommonAudio.Add(200, audioMon);
-        ResourceManager.Instance.LoadAudio("common/AtkBow", (resName, resData, callBackHash) =>
-        {
-            _CommonAudio.Add(200, resData);
-        }, null);
+        //ResourceManager.Instance.LoadAudio("common/HitSwordNone", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(1, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HitSwordBody", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(2, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HitSwordSlap", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(3, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HitSwordSlap2", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(4, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HitHwNone", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(10, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HitHwBody", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(11, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HwAtk", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(12, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/AtkFire", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(100, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/AtkIce", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(101, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/AtkLighting", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(102, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/AtkStone", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(103, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/AtkWind", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(104, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HitFire", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(110, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HitFire", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(111, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HitLighting", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(112, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HitStone", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(113, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/HitWind", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(114, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/AtkFire2", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(120, resData);
+        //}, null);
+        
+        //ResourceManager.Instance.LoadAudio("common/AtkBow", (resName, resData, callBackHash) =>
+        //{
+        //    _CommonAudio.Add(200, resData);
+        //}, null);
     }
 
 
@@ -388,16 +426,16 @@ public class ResourcePool : InstanceBase<ResourcePool>
 
     public static Dictionary<ConfigEnum, string> ConfigPrefabs = new Dictionary<ConfigEnum, string>()
     {
-        { ConfigEnum.HitProtectedBuff, "SkillMotion/CommonImpact/HitProtectedBuff"},
-        { ConfigEnum.DexAccelateBuff, "SkillMotion/CommonImpact/DexAccelateBuff"},
-        { ConfigEnum.SuperArmor, "SkillMotion/CommonImpact/SuperArmor"},
-        { ConfigEnum.SuperArmorBlock, "SkillMotion/CommonImpact/SuperArmorBlock"},
-        { ConfigEnum.BlockBullet, "SkillMotion/CommonImpact/BlockBullet"},
-        { ConfigEnum.IntShieldBuff, "SkillMotion/CommonImpact/IntShieldBuff"},
-        { ConfigEnum.StrBuff, "SkillMotion/CommonImpact/StrBuff"},
-        { ConfigEnum.ResourceConfig, "Common/ResourceConfig"},
-        { ConfigEnum.RandomBuff, "SkillMotion/CommonImpact/EliteRandomBuff"},
-        { ConfigEnum.BlockSummon, "SkillMotion/CommonImpact/BlockSummon"},
+        //{ ConfigEnum.HitProtectedBuff, "SkillMotion/CommonImpact/HitProtectedBuff"},
+        //{ ConfigEnum.DexAccelateBuff, "SkillMotion/CommonImpact/DexAccelateBuff"},
+        //{ ConfigEnum.SuperArmor, "SkillMotion/CommonImpact/SuperArmor"},
+        //{ ConfigEnum.SuperArmorBlock, "SkillMotion/CommonImpact/SuperArmorBlock"},
+        //{ ConfigEnum.BlockBullet, "SkillMotion/CommonImpact/BlockBullet"},
+        //{ ConfigEnum.IntShieldBuff, "SkillMotion/CommonImpact/IntShieldBuff"},
+        //{ ConfigEnum.StrBuff, "SkillMotion/CommonImpact/StrBuff"},
+        //{ ConfigEnum.ResourceConfig, "Common/ResourceConfig"},
+        //{ ConfigEnum.RandomBuff, "SkillMotion/CommonImpact/EliteRandomBuff"},
+        //{ ConfigEnum.BlockSummon, "SkillMotion/CommonImpact/BlockSummon"},
     };
 
     public Dictionary<string, GameObject> _ConfigPrefabs;

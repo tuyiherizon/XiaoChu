@@ -35,11 +35,14 @@ public class LogicManager
         PlayerDataPack.Instance.LoadClass(true);
         PlayerDataPack.Instance.InitPlayerData();
 
+        StageDataPack.Instance.LoadClass(true);
+        StageDataPack.Instance.InitStageInfo();
+
         WeaponDataPack.Instance.LoadClass(true);
         WeaponDataPack.Instance.InitWeaponInfo();
 
-        StageDataPack.Instance.LoadClass(true);
-        StageDataPack.Instance.InitStageInfo();
+        GemDataPack.Instance.LoadClass(true);
+        GemDataPack.Instance.InitGemInfo();
     }
 
     #endregion
@@ -84,18 +87,11 @@ public class LogicManager
 
     #region Fight
 
-    private StageInfoRecord _EnterStageInfo;
-    public StageInfoRecord EnterStageInfo
-    {
-        get
-        {
-            return _EnterStageInfo;
-        }
-    }
+    public StageDataItem EnterStageInfo;
 
-    public void EnterFight(StageInfoRecord enterStage)
+    public void EnterFight(StageDataItem enterStage)
     {
-        _EnterStageInfo = enterStage;
+        EnterStageInfo = enterStage;
 
         GameCore.Instance.UIManager.DestoryAllUI();
 
@@ -104,18 +100,19 @@ public class LogicManager
 
         GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_ENTER_STAGE, this, hash);
 
-        var mapRecord = StageMapRecord.ReadStageMap(enterStage.ScenePath[0]);
+        UIFightBattleField.ShowAsyn();
+
+        var mapRecord = StageMapRecord.ReadStageMap(enterStage.StageRecord.ScenePath);
         BallBox.Instance.Init(mapRecord);
         BallBox.Instance.InitBallInfo();
 
-        BattleField.Instance.InitBattle(enterStage);
+        BattleField.Instance.InitBattle(enterStage.StageRecord, mapRecord);
     }
 
     public void EnterFightFinish()
     {
-        UIFightBattleField.ShowAsyn();
-        UIFightBox.ShowStage(EnterStageInfo);
-        GameCore.Instance._SoundManager.PlayBGMusic(EnterStageInfo.Audio);
+        UIFightBox.ShowStage(EnterStageInfo.StageRecord);
+        GameCore.Instance._SoundManager.PlayBGMusic(GameCore.Instance._SoundManager._FightAudio);
     }
 
     public void ExitFight()
@@ -124,6 +121,8 @@ public class LogicManager
 
         UIStageSelect.ShowAsyn();
         UIMainFun.ShowAsyn();
+
+        GameCore.Instance._SoundManager.PlayBGMusic(GameCore.Instance._SoundManager._LogicAudio);
     }
 
     public void ExitFightScene()

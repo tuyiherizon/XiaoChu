@@ -13,7 +13,7 @@ public class UISystemSetting : UIBase
     {
         Hashtable hash = new Hashtable();
         hash.Add("IsInFight", isInFight);
-        GameCore.Instance.UIManager.ShowUI(UIConfig.UISystemSetting, UILayer.BaseUI, hash);
+        GameCore.Instance.UIManager.ShowUI(UIConfig.UISystemSetting, UILayer.SubPopUI, hash);
     }
 
     #endregion
@@ -21,11 +21,7 @@ public class UISystemSetting : UIBase
 
     #region setting
 
-    public Toggle _Shadow;
     public Slider _Volumn;
-    public Toggle _AimTarget;
-    public GameObject _FightTipsGO;
-    public Button _QuitFightBtn;
 
     public override void Show(Hashtable hash)
     {
@@ -37,87 +33,21 @@ public class UISystemSetting : UIBase
 
     public void InitSetting(bool isInFight)
     {
-        _Shadow.isOn = GlobalValPack.Instance.IsShowShadow;
-        _Volumn.value = GlobalValPack.Instance.Volume;
-        _AimTarget.isOn = GlobalValPack.Instance.IsRotToAnimTarget;
-
-        _FightTipsGO.SetActive(true);
-        if (isInFight)
+        if (_Volumn != null)
         {
-            
-            _QuitFightBtn.gameObject.SetActive(true);
-        }
-        else
-        {
-            //_FightTipsGO.SetActive(false);
-            _QuitFightBtn.gameObject.SetActive(false);
+            _Volumn.value = GlobalValPack.Instance.Volume;
         }
     }
-
-    public void OnTrigShadow(bool isTrig)
-    {
-        GlobalValPack.Instance.IsShowShadow = isTrig;
-    }
-
-    public void OnTriggerLight(bool isTrigger)
-    {
-
-        if (!isTrigger)
-        {
-            var light = GameObject.FindObjectOfType<Light>();
-            UIMessageTip.ShowMessageTip(light.name + "," + light.transform.parent.name);
-            if (light != null)
-            {
-                light.enabled = false;
-            }
-        }
-        else
-        {
-            var light = GameObject.FindObjectOfType<Light>();
-            if (light != null)
-            {
-                light.enabled = true;
-            }
-        }
-    }
-
+    
     public void OnSlider()
     {
         GlobalValPack.Instance.Volume = _Volumn.value;
     }
 
-    public void OnTrigAimTarget(bool isTrig)
+    public void OnExit()
     {
-        GlobalValPack.Instance.IsRotToAnimTarget = isTrig;
+        LogicManager.Instance.ExitFight();
     }
-
-    public void OnBtnFightTips()
-    {
-
-    }
-
-    public void OnBtnStageTips()
-    {
-
-    }
-
-    public void OnBtnQuitFight()
-    {
-        UIMessageBox.Show(100000, ()=>
-        {
-            LogicManager.Instance.ExitFightScene();
-        }, null);
-    }
-
-    public void OnBtnQuitGame()
-    {
-        UIMessageBox.Show(1000006, () =>
-        {
-            LogicManager.Instance.QuitGame();
-            Debug.Log("save data");
-        }, null);
-    }
-
     #endregion
 }
 

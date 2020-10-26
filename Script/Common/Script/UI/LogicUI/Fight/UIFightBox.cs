@@ -11,51 +11,156 @@ public class UIFightBox : UIBase
     public static void ShowAsyn()
     {
         Hashtable hash = new Hashtable();
-        GameCore.Instance.UIManager.ShowUI(UIConfig.UIFightBox, UILayer.PopUI, hash);
+        GameCore.Instance.UIManager.ShowUI(UIConfig.UIFightBox, UILayer.BaseUI, hash);
     }
 
     public static void ShowStage(StageInfoRecord stageRecord)
     {
         Hashtable hash = new Hashtable();
         hash.Add("StageInfo", stageRecord);
-        GameCore.Instance.UIManager.ShowUI(UIConfig.UIFightBox, UILayer.PopUI, hash);
+        GameCore.Instance.UIManager.ShowUI(UIConfig.UIFightBox, UILayer.BaseUI, hash);
+    }
+
+    public static void ShowMonsterBalls(List<BallInfo> animBalls)
+    {
+        var instance = GameCore.Instance.UIManager.GetUIInstance<UIFightBox>(UIConfig.UIFightBox);
+        if (instance == null)
+            return;
+
+        if (!instance.isActiveAndEnabled)
+            return;
+
+        instance.ShowMonsterSkillBalls(animBalls);
+    }
+
+    public static UIFightBall GetFightBall(BallInfo ballInfo)
+    {
+        if (ballInfo == null)
+            return null;
+        return GetFightBall((int)ballInfo.Pos.x, (int)ballInfo.Pos.y);
+    }
+
+    public static UIFightBall GetFightBall(int x, int y)
+    {
+        var instance = GameCore.Instance.UIManager.GetUIInstance<UIFightBox>(UIConfig.UIFightBox);
+        if (instance == null)
+            return null;
+
+        if (!instance.isActiveAndEnabled)
+            return null;
+
+        return instance.GetBallUI(x, y);
+    }
+
+    public static void ShowOptMask()
+    {
+        var instance = GameCore.Instance.UIManager.GetUIInstance<UIFightBox>(UIConfig.UIFightBox);
+        if (instance == null)
+            return;
+
+        if (!instance.isActiveAndEnabled)
+            return;
+
+        instance.ShowMask();
+    }
+
+    public static void HideOptMask()
+    {
+        var instance = GameCore.Instance.UIManager.GetUIInstance<UIFightBox>(UIConfig.UIFightBox);
+        if (instance == null)
+            return;
+
+        if (!instance.isActiveAndEnabled)
+            return;
+
+        instance.HideMask();
+    }
+
+    public static bool IsTestMode()
+    {
+        var instance = GameCore.Instance.UIManager.GetUIInstance<UIFightBox>(UIConfig.UIFightBox);
+        if (instance == null)
+            return false;
+
+        if (!instance.isActiveAndEnabled)
+            return false;
+
+        return instance._TestMode;
+    }
+
+    public static void SetTest()
+    {
+        var instance = GameCore.Instance.UIManager.GetUIInstance<UIFightBox>(UIConfig.UIFightBox);
+        if (instance == null)
+            return;
+
+        if (!instance.isActiveAndEnabled)
+            return;
+
+        instance.TestBall();
     }
 
     #endregion
 
+    void OnEnable()
+    {
+        _LastMoveTime = Time.time;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        //BallBox.Instance.Init();
-        //BallBox.Instance.InitBallInfo();
-        //InitBox(BallBox.Instance.BoxWidth, BallBox.Instance.BoxHeight);
-        //DebugTest();
+        UIFightBattleField.ShowElimitInfo();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        GuideUpdate();
+
+        TestFightUpdate();
     }
 
     public override void Show(Hashtable hash)
     {
         base.Show(hash);
-        
+
+        ResourceManager.Instance.SetImage(_BG, LogicManager.Instance.EnterStageInfo.StageRecord.BG);
+
         InitBox(BallBox.Instance.BoxWidth, BallBox.Instance.BoxHeight);
+
+        ResourcePool.Instance.InitDefaultRes();
     }
 
     #region box
 
+    public Image _BG;
     public GameObject _BallPrefab;
     public GridLayoutGroup _FightBox;
     public GameObject _EliminateTipGO1;
     public GameObject _EliminateTipGO2;
     public GameObject _OptMask;
 
+    public GameObject _BallBGPrefab;
+    public GameObject _BallBGBox;
+    public RectTransform _BoxBGBounderBottom;
+    public RectTransform _BoxBGBounderLeft;
+    public RectTransform _BoxBGBounderRight;
+
     private UIFightBall[][] _BallInfos;
     private int _BoxWidth;
     private int _BoxLength;
+
+    public void ResetSceneLogic(StageInfoRecord sceneRecord)
+    {
+        var mapRecord = StageMapRecord.ReadStageMap(sceneRecord.ScenePath);
+        BallBox.Instance.Init(mapRecord);
+        BallBox.Instance.InitBallInfo();
+
+        UpdateBalls();
+
+        RecordBallDamage.LoadingStageID = sceneRecord.Id;
+    }
 
     public void OnReset()
     {
@@ -68,9 +173,14 @@ public class UIFightBox : UIBase
     public void RefreshNormal()
     {
         ClearCheckGOs();
-        BallBox.Instance.RefreshNormal();
+        BallBox.Instance.RefreshNormalForElimit(false);
         UpdateBalls();
         //DebugTest();
+    }
+
+    public void OnRecordMap()
+    {
+        RandomMonster.WriteMapRecord(LogicManager.Instance.EnterStageInfo.StageID);
     }
 
     public void OnBtnAutoEliminate()
@@ -148,14 +258,7 @@ public class UIFightBox : UIBase
                 GameObject ballGO = GameObject.Instantiate(_BallPrefab.gameObject);
                 UIFightBall ballInfo = ballGO.GetComponentInChildren<UIFightBall>();
 
-                if (j < y)
-                {
-                    ballGO.gameObject.SetActive(true);
-                }
-                else
-                {
-                    ballGO.gameObject.SetActive(false);
-                }
+               
                 ballGO.transform.SetParent(_FightBox.transform);
                 ballGO.transform.localScale = Vector3.one;
                 var localPos = GetBallPosByIdx(0,0, i, j);
@@ -164,8 +267,32 @@ public class UIFightBox : UIBase
                 _BallInfos[i][j] = ballInfo;
                 _BallInfos[i][j]._Pos = new Vector2(i, j);
                 _BallInfos[i][j].SetFightBox(this);
+
+                if (j < y)
+                {
+                    ballGO.gameObject.SetActive(true);
+                    var bgGO = GameObject.Instantiate(_BallBGPrefab);
+                    bgGO.gameObject.SetActive(true);
+                    bgGO.transform.SetParent(_BallBGBox.transform);
+                    bgGO.transform.position = ballGO.transform.position;
+                    bgGO.transform.localScale = Vector3.one;
+
+                }
+                else
+                {
+                    ballGO.gameObject.SetActive(false);
+                }
             }
         }
+
+        _BoxBGBounderBottom.sizeDelta = new Vector2(_BallWidth * x, _BoxBGBounderBottom.sizeDelta.y);
+        _BoxBGBounderBottom.localPosition = _BallInfos[0][0].transform.localPosition - new Vector3(_BallWidth * 0.5f, _BallHeight * 0.5f, 0);
+
+        _BoxBGBounderLeft.sizeDelta = new Vector2(_BallHeight * y, _BoxBGBounderLeft.sizeDelta.y);
+        _BoxBGBounderLeft.localPosition = _BallInfos[0][(int)_BoxLength - 1].transform.localPosition + new Vector3(-_BallWidth * 0.5f, _BallHeight * 0.5f, 0);
+
+        _BoxBGBounderRight.sizeDelta = new Vector2(_BallHeight * y, _BoxBGBounderRight.sizeDelta.y);
+        _BoxBGBounderRight.localPosition = _BallInfos[(int)_BoxWidth - 1][0].transform.localPosition + new Vector3(_BallWidth * 0.5f, -_BallHeight * 0.5f, 0);
 
         for (int j = 0; j < _BoxLength; ++j)
         {
@@ -184,6 +311,7 @@ public class UIFightBox : UIBase
         {
             for (int i = 0; i < _BoxWidth; ++i)
             {
+                _BallInfos[i][j].SetBallInfo(BallBox.Instance._BallBoxInfo[i][j]);
                 _BallInfos[i][j].ShowBall();
             }
         }
@@ -298,8 +426,8 @@ public class UIFightBox : UIBase
     #region anim
 
     public GameObject _ElimitCheckPrefab;
-    public float _ExchangeBallTime = 0.5f;
-    public float _ElimitBallTime = 0.25f;
+    public float _ExchangeBallTime = 0.3f;
+    public float _ElimitBallTime = 0.2f;
 
     private List<GameObject> _ElimitCheckGOs = new List<GameObject>();
     private void CreateCheckGOs(int num)
@@ -327,6 +455,9 @@ public class UIFightBox : UIBase
 
     public void ExChangeBalls(UIFightBall ballA, UIFightBall ballB)
     {
+        _TestMode = false;
+        _LastMoveTime = Time.time;
+        
         if (!ballA.BallInfo.IsCanMove() || !ballB.BallInfo.IsCanMove())
             return;
 
@@ -334,13 +465,23 @@ public class UIFightBox : UIBase
         iTween.MoveTo(ballA._FightBallAnchor.gameObject, ballB.transform.position, _ExchangeBallTime);
         iTween.MoveTo(ballB._FightBallAnchor.gameObject, ballA.transform.position, _ExchangeBallTime);
         StartCoroutine(AnimEnd(ballA, ballB));
+        PlayMoveSound();
+        UIGuide.HideGuide();
     }
 
     public IEnumerator AnimEnd(UIFightBall ballA, UIFightBall ballB)
     {
-        yield return new WaitForSeconds(_ExchangeBallTime);
+
+        yield return new WaitForSeconds(_ExchangeBallTime + 0.1f);
+        //iTween.Stop();
         BallBox.Instance.MoveBall(ballA.BallInfo, ballB.BallInfo);
-        ballA.Exchange(ballB);
+        //ballA.Exchange(ballB);
+
+        ballA.ResetRoot();
+        ballB.ResetRoot();
+
+        ballA.ShowBall();
+        ballB.ShowBall();
 
         var moveList = new List<BallInfo>() { ballA.BallInfo, ballB.BallInfo };
         var elimitBalls = BallBox.Instance.CheckNormalEliminate(moveList);
@@ -358,25 +499,91 @@ public class UIFightBox : UIBase
             iTween.MoveTo(ballA._FightBallAnchor.gameObject, ballB.transform.position, _ExchangeBallTime);
             iTween.MoveTo(ballB._FightBallAnchor.gameObject, ballA.transform.position, _ExchangeBallTime);
 
-            yield return new WaitForSeconds(_ExchangeBallTime);
+            yield return new WaitForSeconds(_ExchangeBallTime + 0.1f);
 
             BallBox.Instance.MoveBack(ballA.BallInfo, ballB.BallInfo);
-            ballA.Exchange(ballB);
+            //ballA.Exchange(ballB);
+            ballA.ResetRoot();
+            ballB.ResetRoot();
+            ballA.ShowBall();
+            ballB.ShowBall();
 
             EndAnim();
+
+            yield break;
         }
         else
         {
             
             do
             {
+                float elimitAnimTime = 0;
+                AudioClip elimitSound = _ElimitAudio;
+                FIGHT_SOUND_TYPE soundLevel = FIGHT_SOUND_TYPE.ELIMIT;
                 foreach (var elimitBall in elimitBalls)
                 {
-                    var uiBall = GetBallUI(elimitBall);
-                    uiBall.Elimit();
-                }
+                    bool isContentBomb = false;
+                    if (!elimitBall._IsBoomSP)
+                    {
+                        foreach (var optBombInfo in BallBox.Instance._CurrentOptExtra)
+                        {
+                            if (optBombInfo._OptBall == elimitBall)
+                            {
+                                isContentBomb = true;
+                                break;
+                            }
+                            foreach (var bombElimitBall in optBombInfo._ElimitBalls)
+                            {
+                                if (bombElimitBall == elimitBall)
+                                {
+                                    isContentBomb = true;
+                                    break;
+                                }
+                            }
+                            if (isContentBomb)
+                            {
+                                break;
+                            }
+                        }
+                    }
 
-                yield return new WaitForSeconds(_ElimitBallTime);
+                    var uiBall = GetBallUI(elimitBall);
+                    if (uiBall.IsSPBallBomb())
+                    {
+                        elimitSound = _BombAudio;
+                        soundLevel = FIGHT_SOUND_TYPE.BOMB;
+                    }
+                    else if (soundLevel < FIGHT_SOUND_TYPE.LINE && uiBall.IsSPBallLine())
+                    {
+                        elimitSound = _LineAudio;
+                        soundLevel = FIGHT_SOUND_TYPE.LINE;
+                    }
+                    else if (soundLevel < FIGHT_SOUND_TYPE.COMBINE && BallBox.Instance._CurrentOptExtra.Count > 0)
+                    {
+                        elimitSound = _CombineAudio;
+                        soundLevel = FIGHT_SOUND_TYPE.COMBINE;
+                    }
+
+                    if (isContentBomb)
+                    {
+                        continue;
+                    }
+                    
+                    var elimitT = uiBall.Elimit();
+                    if (elimitT > elimitAnimTime)
+                    {
+                        elimitAnimTime = elimitT;
+                    }
+
+                    
+                }
+                PlayerUISound(elimitSound, 1);
+                StartCoroutine( BombCreateAnim());
+
+                yield return new WaitForSeconds(elimitAnimTime + _ElimitBallTime);
+                
+
+                BallBox.Instance.ClearElimitInfo();
 
                 foreach (var elimitBall in elimitBalls)
                 {
@@ -384,19 +591,23 @@ public class UIFightBox : UIBase
                     uiBall.ShowBall();
 
                 }
-                
                 yield return new WaitForSeconds(_ElimitBallTime);
+
+                UIFightBattleField.ShowElimitInfo();
 
                 var fillingTime = Filling();
                 yield return new WaitForSeconds(fillingTime);
-
-                elimitBalls = BallBox.Instance.CheckNormalEliminate(_FillingBalls);
+                List<BallInfo> checkBalls = new List<BallInfo>();
+                BallBox.AddBallInfos(checkBalls, _FillingBalls);
+                BallBox.AddBallInfos(checkBalls, exploreBalls);
+                elimitBalls = BallBox.Instance.CheckNormalEliminate();
+                //elimitBalls = BallBox.Instance.CheckNormalEliminate();
                 var spSubElimitBalls = BallBox.Instance.CheckSpElimit(elimitBalls);
-                var subexploreBalls = BallBox.Instance.CurrentElimitnate();
+                exploreBalls = BallBox.Instance.CurrentElimitnate();
                 var subafterElimit = BallBox.Instance.AfterElimitnate();
 
                 BallBox.AddBallInfos(elimitBalls, spSubElimitBalls);
-                BallBox.AddBallInfos(elimitBalls, subexploreBalls);
+                BallBox.AddBallInfos(elimitBalls, exploreBalls);
                 BallBox.AddBallInfos(elimitBalls, subafterElimit);
             }
             while (elimitBalls.Count > 0);
@@ -419,14 +630,55 @@ public class UIFightBox : UIBase
             Debug.Log("No eliminate!!!");
             yield return new WaitForSeconds(1);
 
+            int refreshTimes = 0;
             while (eliminate == null)
             {
-                RefreshNormal();
+                if (refreshTimes < 2)
+                {
+                    RefreshNormal();
+                }
+                else
+                {
+                    BallBox.Instance.RefreshNormalForElimit(false);
+                    UpdateBalls();
+                }
+                ++refreshTimes;
                 eliminate = BallBox.Instance.FindPowerEliminate();
             }
         }
 
+        //ShowElimit();
         EndAnim();
+    }
+
+    public IEnumerator BombCreateAnim()
+    {
+        
+        foreach (var optBombInfo in BallBox.Instance._CurrentOptExtra)
+        {
+            var uiOptBall = GetBallUI(optBombInfo._OptBall);
+            foreach (var elimitBall in optBombInfo._ElimitBalls)
+            {
+                if (elimitBall != optBombInfo._OptBall)
+                {
+                    var uiElimitBall = GetBallUI(elimitBall);
+                    uiElimitBall.BombMoveTo(uiOptBall);
+                }
+            }
+        }
+
+        yield return new WaitForSeconds(_ElimitBallTime);
+
+        foreach (var optBombInfo in BallBox.Instance._CurrentOptExtra)
+        {
+            var uiOptBall = GetBallUI(optBombInfo._OptBall);
+            uiOptBall.ShowBall();
+        }
+    }
+
+    public void BombCreateMoveComplate()
+    {
+
     }
 
     List<BallInfo> _FillingBalls = new List<BallInfo>();
@@ -493,12 +745,33 @@ public class UIFightBox : UIBase
 
     public void StarAnim()
     {
-        _OptMask.SetActive(true);
+        ShowMask();
     }
 
     public void EndAnim()
     {
+        HideMask();
+    }
+
+    public void ShowMask()
+    {
+        _OptMask.SetActive(true);
+    }
+
+    public void HideMask()
+    {
         _OptMask.SetActive(false);
+        _LastMoveTime = Time.time;
+    }
+
+    public void ShowMonsterSkillBalls(List<BallInfo> animBalls)
+    {
+        foreach (var animBall1 in animBalls)
+        {
+            var uiBall = GetBallUI(animBall1);
+            uiBall.ShowBall();
+
+        }
     }
 
     #endregion
@@ -516,6 +789,76 @@ public class UIFightBox : UIBase
         {
             _DragBall = value;
         }
+    }
+
+    public float _GuideShowDelay = 5;
+    private float _LastMoveTime;
+    public void GuideTips()
+    {
+        var moveBalls = BallBox.Instance.FindAnyEliminate();
+
+        List<Transform> moveTrans = new List<Transform>();
+        var ballUIFrom = GetBallUI(moveBalls.FromBall);
+        moveTrans.Add(ballUIFrom.transform);
+        var ballUITo = GetBallUI(moveBalls.ToBall);
+        moveTrans.Add(ballUITo.transform);
+
+        UIGuide.ShowPoint(moveTrans);
+    }
+
+    private void GuideUpdate()
+    {
+        if (UIGuide.IsShowingGuide())
+            return;
+
+        if (_LastMoveTime == 0)
+            return;
+
+        if (Time.time - _LastMoveTime > _GuideShowDelay)
+        {
+            GuideTips();
+            _LastMoveTime = Time.time;
+        }
+    }
+
+    #endregion
+
+    #region sound
+
+    public AudioClip _CombineAudio;
+    public AudioClip _BombAudio;
+    public AudioClip _LineAudio;
+    public AudioClip _ElimitAudio;
+    public AudioClip _MoveAudio;
+
+    public enum FIGHT_SOUND_TYPE
+    {
+        ELIMIT = 0,
+        CLUB,
+        ICE,
+        COMBINE,
+        LINE,
+        BOMB,
+    }
+
+    public void PlayCombineSound()
+    {
+        PlayerUISound(_CombineAudio);
+    }
+
+    public void PlayMoveSound()
+    {
+        PlayerUISound(_MoveAudio);
+    }
+
+    public void PlayBombSound()
+    {
+        PlayerUISound(_BombAudio);
+    }
+
+    public void PlayLineSound()
+    {
+        PlayerUISound(_LineAudio);
     }
 
     #endregion
@@ -542,7 +885,75 @@ public class UIFightBox : UIBase
         Debug.Log("UIFIghtBox test:" + testStr);
     }
 
+    public bool _TestMode = false;
+    public void TestBallStep()
+    {
+        int textTime = 0;
+        
+        //foreach (var stageRecord in TableReader.StageInfo.Records.Values)
+        {
+            //ResetSceneLogic(stageRecord);
+            //for (int k = 0; k < RecordBallDamage._RecordTimes; ++k)
+            {
+                //for (int j = 0; j < RecordBallDamage._RecordRound; ++j)
+                {
+                    for (int i = 0; i < BattleField._DamageOptRound; ++i)
+                    {
+                        TestBallMove();
+                    }
+                }
+                //OnReset();
+            }
+        }
+
+        //RecordBallDamage.WriteRecords();
+    }
+
     public void TestBall()
+    {
+        int textTime = 0;
+        _TestMode = true;
+        //foreach (var stageRecord in TableReader.StageInfo.Records.Values)
+        {
+            //ResetSceneLogic(stageRecord);
+            //for (int k = 0; k < RecordBallDamage._RecordTimes; ++k)
+            {
+                //for (int j = 0; j < RecordBallDamage._RecordRound; ++j)
+                {
+                    //for (int i = 0; i < BattleField._DamageOptRound; ++i)
+                    //{
+                    //    TestBallMove();
+                    //}
+                }
+                //OnReset();
+            }
+        }
+
+        //RecordBallDamage.WriteRecords();
+    }
+
+    private float _LastOptTime = -1;
+    private float _OptWait = 0.1f;
+    public void TestFightUpdate()
+    {
+        //return;
+        if (!_TestMode)
+            return;
+
+        if (UIStageFail.IsShow())
+            return;
+
+        if (UIStageSucess.IsShow())
+            return;
+
+        if (Time.time - _LastOptTime > _OptWait)
+        {
+            TestBallMove();
+            _LastOptTime = Time.time;
+        }
+    }
+
+    public void TestBallMove()
     {
         var eliminate = BallBox.Instance.FindPowerEliminate();
         if (eliminate == null)
@@ -558,49 +969,98 @@ public class UIFightBox : UIBase
         var ballB = GetBallUI(eliminate.ToBall);
         BallBox.Instance.MoveBall(ballA.BallInfo, ballB.BallInfo);
 
+        ballA.ShowBall();
+        ballB.ShowBall();
+
         var moveList = new List<BallInfo>() { ballA.BallInfo, ballB.BallInfo };
         var elimitBalls = BallBox.Instance.CheckNormalEliminate(moveList);
         var spElimitMove = BallBox.Instance.CheckSpMove(moveList);
         var spElimitElimit = BallBox.Instance.CheckSpElimit(elimitBalls);
         var exploreBalls = BallBox.Instance.CurrentElimitnate();
+        var afterElimit = BallBox.Instance.AfterElimitnate();
 
         BallBox.AddBallInfos(elimitBalls, spElimitMove);
         BallBox.AddBallInfos(elimitBalls, spElimitElimit);
         BallBox.AddBallInfos(elimitBalls, exploreBalls);
-
-        do
+        BallBox.AddBallInfos(elimitBalls, afterElimit);
         {
-            var fallExchanges = BallBox.Instance.ElimitnateFall();
 
-            elimitBalls = BallBox.Instance.CheckNormalEliminate(_FillingBalls);
-            var spSubElimitBalls = BallBox.Instance.CheckSpElimit(elimitBalls);
-            elimitBalls.AddRange(spSubElimitBalls);
-            BallBox.Instance.CurrentElimitnate();
-            //var subSpElimitBalls = BallBox.Instance.CheckSpElimit(elimitBalls);
-            //elimitBalls.AddRange(subSpElimitBalls);
+            do
+            {
+                BallBox.Instance.ClearElimitInfo();
+
+                foreach (var elimitBall in elimitBalls)
+                {
+                    var uiBall = GetBallUI(elimitBall);
+                    uiBall.ShowBall();
+
+                }
+                UIFightBattleField.ShowElimitInfo();
+
+                var fallExchanges = BallBox.Instance.ElimitnateFall();
+                for (int i = 0; i < fallExchanges.Count; ++i)
+                {
+                    var uiBall1 = GetBallUI(fallExchanges[i].FromBall);
+                    if (uiBall1 != null)
+                    {
+                        uiBall1.ShowBall();
+                    }
+
+                    var uiBall2 = GetBallUI(fallExchanges[i].ToBall);
+                    uiBall2.ShowBall();
+
+                    _FillingBalls.Add(uiBall2.BallInfo);
+                }
+                elimitBalls = BallBox.Instance.CheckNormalEliminate(_FillingBalls);
+                var spSubElimitBalls = BallBox.Instance.CheckSpElimit(elimitBalls);
+                var subexploreBalls = BallBox.Instance.CurrentElimitnate();
+                var subafterElimit = BallBox.Instance.AfterElimitnate();
+
+                BallBox.AddBallInfos(elimitBalls, spSubElimitBalls);
+                BallBox.AddBallInfos(elimitBalls, subexploreBalls);
+                BallBox.AddBallInfos(elimitBalls, subafterElimit);
+            }
+            while (elimitBalls.Count > 0);
         }
-        while (elimitBalls.Count > 0);
+
+        if (BallBox.Instance.CheckElimitSimple())
+        {
+            _TestMode = false;
+            return;
+        }
 
         var reShowList = BallBox.Instance.RoundEnd();
 
-        eliminate = BallBox.Instance.FindPowerEliminate();
-        if (eliminate == null)
+        if (reShowList != null && reShowList.Count > 0)
         {
-            while (eliminate == null)
+            foreach (var elimitBall in reShowList)
             {
-                RefreshNormal();
-                eliminate = BallBox.Instance.FindPowerEliminate();
-            }
-        }
-
-        foreach (var uiBallRow in _BallInfos)
-        {
-            foreach (var uiBall in uiBallRow)
-            {
+                var uiBall = GetBallUI(elimitBall);
                 uiBall.ShowBall();
             }
         }
 
+        eliminate = BallBox.Instance.FindPowerEliminate();
+        if (eliminate == null)
+        {
+            int refreshTimes = 0;
+            while (eliminate == null)
+            {
+                if (refreshTimes < 2)
+                {
+                    RefreshNormal();
+                }
+                else
+                {
+                    BallBox.Instance.RefreshNormalForElimit(true);
+                    UpdateBalls();
+                }
+                ++refreshTimes;
+
+                eliminate = BallBox.Instance.FindPowerEliminate();
+            }
+        }
+        _LastMoveTime = Time.time;
     }
 
 }
