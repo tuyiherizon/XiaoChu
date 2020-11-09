@@ -123,6 +123,8 @@ public class LogicManager
         UIMainFun.ShowAsyn();
 
         GameCore.Instance._SoundManager.PlayBGMusic(GameCore.Instance._SoundManager._LogicAudio);
+
+        
     }
 
     public void ExitFightScene()

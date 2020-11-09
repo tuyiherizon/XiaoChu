@@ -485,7 +485,7 @@ public class BattleField
     public int GetReviveCost()
     {
         int stageLevel = _StageRecord.Level;
-        int costValue = Tables.GameDataValue.GetLevelDataValue(stageLevel, VALUE_IDX.STAGE_GOLD) * 40;
+        int costValue = Tables.GameDataValue.GetLevelDataValue(stageLevel, VALUE_IDX.STAGE_GOLD) * 4;
         return costValue;
     }
 

@@ -145,7 +145,14 @@ public class WeaponDataItem:ItemBase
         for (int i = 0; i < upgradeDelta; ++i)
         {
             var costLevel = attrLevel + upgradeDelta;
-            costGold += Tables.GameDataValue.GetLevelDataValue(costLevel, VALUE_IDX.STAGE_GOLD) * 3;
+            if (costLevel < 100)
+            {
+                costGold += Tables.GameDataValue.GetLevelDataValue(costLevel, VALUE_IDX.STAGE_GOLD) * 2;
+            }
+            else
+            {
+                costGold += Tables.GameDataValue.GetLevelDataValue(costLevel, VALUE_IDX.STAGE_GOLD) * 3;
+            }
         }
 
         return costGold;
@@ -273,6 +280,10 @@ public class WeaponDataPack : DataPackBase
             weaponItem.Level = 1;
             SaveClass(true);
         }
+
+        Hashtable hash = new Hashtable();
+        hash.Add("WeaponItem", weaponItem);
+        GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_BUY_WEAPON, this, hash);
     }
 
     public void LvUpWeapon(WeaponDataItem weaponItem)
@@ -288,6 +299,10 @@ public class WeaponDataPack : DataPackBase
             ++weaponItem.Level;
             SaveClass(true);
         }
+
+        Hashtable hash = new Hashtable();
+        hash.Add("WeaponItem", weaponItem);
+        GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_UPGRADE_WEAPON, this, hash);
     }
     #endregion
 

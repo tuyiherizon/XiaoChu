@@ -60,13 +60,27 @@ public class UIStageFail : UIBase
     public void OnBtnOK()
     {
         LogicManager.Instance.ExitFight();
+
+        Hashtable hash = new Hashtable();
+        hash.Add("StageRecord", LogicManager.Instance.EnterStageInfo);
+
+        GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_FAIL_STAGE, this, hash);
     }
 
     public void OnAdRevive()
     {
+        AdManager.Instance.WatchAdVideo(OnADFinish);
+    }
+
+    public void OnADFinish()
+    {
         BattleField.Instance.RoleRelive(1);
         UIFightBattleField.RefreshReviveStatic();
         Hide();
+
+        Hashtable hash = new Hashtable();
+        
+        GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_REVIVE_AD, this, hash);
     }
 
     public void OnGoldRevive()
@@ -74,5 +88,9 @@ public class UIStageFail : UIBase
         BattleField.Instance.RoleRelive(2);
         UIFightBattleField.RefreshReviveStatic();
         Hide();
+
+        Hashtable hash = new Hashtable();
+
+        GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_REVIVE_GOLD, this, hash);
     }
 }

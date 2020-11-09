@@ -23,6 +23,8 @@ public class GameCore : MonoBehaviour
     {
         ResourceManager.InitResourceManager();
         StartCoroutine(UpdateInit());
+
+        DataRecordManager.Instance.InitDataRecord();
     }
 
     public void Update()

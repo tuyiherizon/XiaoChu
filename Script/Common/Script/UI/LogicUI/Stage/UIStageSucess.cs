@@ -120,5 +120,10 @@ public class UIStageSucess : UIBase
     public void OnOK()
     {
         LogicManager.Instance.ExitFight();
+
+        Hashtable hash = new Hashtable();
+        hash.Add("StageRecord", LogicManager.Instance.EnterStageInfo);
+
+        GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_PASS_STAGE, this, hash);
     }
 }

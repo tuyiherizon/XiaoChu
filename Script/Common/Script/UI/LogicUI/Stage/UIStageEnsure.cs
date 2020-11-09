@@ -95,11 +95,11 @@ public class UIStageEnsure : UIBase
 
     public void OnTestPass1()
     {
-        //StageDataPack.Instance.TestPass(_StageInfo.StageID, 3);
-        //Hide();
-        //UIStageSelect.RefreshStage();
+        StageDataPack.Instance.TestPass(_StageInfo.StageID, 3);
+        Hide();
+        UIStageSelect.RefreshStage();
 
-        GameCore.Instance.TestStage(_StageInfo);
+        //GameCore.Instance.TestStage(_StageInfo);
 
     }
 }

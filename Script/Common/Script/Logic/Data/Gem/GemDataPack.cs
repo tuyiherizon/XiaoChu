@@ -237,6 +237,10 @@ public class GemDataPack : DataPackBase
         }
 
         //_GemItems.SaveClass(true);
+        Hashtable hash = new Hashtable();
+        hash.Add("Num", buyNum);
+        GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_BUY_GEM, this, hash);
+
         return resultItems;
     }
 
@@ -289,6 +293,10 @@ public class GemDataPack : DataPackBase
 
         var randomItem = GetRandomGemItem(gemLevel);
         _GemItems.AddItem(randomItem);
+
+        Hashtable hash = new Hashtable();
+        hash.Add("Level", gemLevel);
+        GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_COMBINE_GEM, this, hash);
 
         //_GemItems.SaveClass(true);
         return randomItem;

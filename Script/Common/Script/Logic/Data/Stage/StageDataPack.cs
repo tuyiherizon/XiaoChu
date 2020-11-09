@@ -204,19 +204,29 @@ public class StageDataPack : DataPackBase
 
     private void RefreshCurIdx()
     {
+        int noStarIdx = -1;
         for (int i = 0; i < _StageItems.Count; ++i)
         {
             if (_StageItems[i].Star == 0)
             {
-                _CurIdx = i;
+                noStarIdx = i;
                 break;
             }
         }
 
-        if (_CurIdx < 0)
+        if (noStarIdx < 0)
         {
-            _CurIdx = _StageItems.Count;
+            noStarIdx = _StageItems.Count;
         }
+
+        if (noStarIdx > _CurIdx && _CurIdx != -1)
+        {
+            Hashtable hash = new Hashtable();
+
+            GameCore.Instance.EventController.PushEvent(EVENT_TYPE.EVENT_LOGIC_PASS_NEW_STAGE, this, hash);
+        }
+
+        _CurIdx = noStarIdx;
     }
 
     #endregion
