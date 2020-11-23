@@ -1,5 +1,5 @@
 ﻿"""ID""","""Name""","""Desc""","""Level""","""StageType""","""FightLogicPath""","""ScenePath""","""Audio""","""Icon""","""BG""","""AwardType1""","""AwardType2""","""AwardType3""","""AwardType4""","""AwardValue1""","""AwardValue2""","""AwardValue3""","""AwardValue4"""
-1,10001,10001,1,0,StageLogic/FightLogic2,StageMap/StageMap1,BgMusic/stage-1,stage/Stage_ShaMo_01,StageBG/bg_main_Iron,10001,10001,10001,10001,400,600,600,600
+1,10001,10001,1,0,StageLogic/FightLogic2,StageMap/StageMapEmpty1,BgMusic/stage-1,stage/Stage_ShaMo_01,StageBG/bg_main_Iron,10001,10001,10001,10001,400,600,600,600
 2,10001,10001,2,0,StageLogic/FightLogic2,StageMap/StageMapEmpty2,BgMusic/stage-1,stage/Stage_ShaMo_01,StageBG/bg_main_Iron,10001,10001,10001,10001,400,600,600,600
 3,10001,10001,3,0,StageLogic/FightLogic2,StageMap/StageMapEmpty3,BgMusic/stage-1,stage/Stage_ShaMo_01,StageBG/bg_main_Iron,10001,10001,10001,10001,400,600,600,600
 4,10001,10001,4,0,StageLogic/FightLogic2,StageMap/StageMapEmpty4,BgMusic/stage-1,stage/Stage_ShaMo_01,StageBG/bg_main_Iron,10001,10001,10001,10001,400,600,600,600

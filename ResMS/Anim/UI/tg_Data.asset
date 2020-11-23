@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a64e5b0e436d4bed9780211ae245f7b, type: 3}
   m_Name: tg_Data
   m_EditorClassIdentifier: 
-  dataName: tg
+  dataName: tg_ske_ske_1
   dragonBonesJSON: {fileID: 4900000, guid: 22048c66f882fb44d8ca0b773298f5ea, type: 3}
   textureAtlas:
   - textureAtlasJSON: {fileID: 4900000, guid: 3509f28ff4d7c9d4897f875de14b0464, type: 3}

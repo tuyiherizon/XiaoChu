@@ -119,13 +119,57 @@ public class UIFightBox : UIBase
         GuideUpdate();
 
         TestFightUpdate();
+
+#if UNITY_EDITOR
+        if (Input.GetKeyDown("t"))
+        {
+            inputTest = !inputTest;
+        }
+
+        InputTestUpdate();
+#endif
     }
+
+#if UNITY_EDITOR
+    bool inputTest = false;
+    public void InputTestUpdate()
+    {
+        if (!inputTest)
+            return;
+
+        if (_OptMask.activeSelf == false)
+        {
+            OnBtnAutoEliminate();
+        }
+    }
+#endif
 
     public override void Show(Hashtable hash)
     {
         base.Show(hash);
 
         ResourceManager.Instance.SetImage(_BG, LogicManager.Instance.EnterStageInfo.StageRecord.BG);
+
+        var eliminate = BallBox.Instance.FindPowerEliminate();
+        if (eliminate == null)
+        {
+            int refreshTimes = 0;
+            while (eliminate == null)
+            {
+                if (refreshTimes < 2)
+                {
+                    RefreshNormal();
+                }
+                else
+                {
+                    BallBox.Instance.RefreshNormalForElimit(true);
+                    UpdateBalls();
+                }
+                ++refreshTimes;
+
+                eliminate = BallBox.Instance.FindPowerEliminate();
+            }
+        }
 
         InitBox(BallBox.Instance.BoxWidth, BallBox.Instance.BoxHeight);
 
@@ -579,6 +623,14 @@ public class UIFightBox : UIBase
                 }
                 PlayerUISound(elimitSound, 1);
                 StartCoroutine( BombCreateAnim());
+
+#if UNITY_EDITOR
+                yield return new WaitForSeconds(0.1f);
+                if (soundLevel > FIGHT_SOUND_TYPE.COMBINE)
+                {
+                    GameCore.Instance.ScreenShot();
+                }
+#endif
 
                 yield return new WaitForSeconds(elimitAnimTime + _ElimitBallTime);
                 

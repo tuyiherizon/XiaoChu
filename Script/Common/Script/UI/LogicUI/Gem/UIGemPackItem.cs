@@ -38,7 +38,7 @@ public class UIGemPackItem : UIItemBase
 
     public void RefreshGemItem(GemDataItem gemItem)
     {
-        _Name.text = StrDictionary.GetFormatStr(gemItem.GemRecord.NameDict);
+        //_Name.text = StrDictionary.GetFormatStr(gemItem.GemRecord.NameDict);
         ResourceManager.Instance.SetImage(_Icon, gemItem.GemRecord.Icon);
         if (gemItem.GemExAttrRecord != null)
         {

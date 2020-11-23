@@ -30,13 +30,11 @@ public class UILogin : UIBase
         base.Show(hash);
 
         GuiTextDebug.debug("UILogin show");
-        InitOkTex.SetActive(false);
         _BtnStart.interactable = false;
 
         LogicManager.Instance.StartLoadLogic();
 
         _BtnStart.interactable = true;
-        InitOkTex.SetActive(true);
     }
 
     #endregion

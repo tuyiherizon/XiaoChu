@@ -27,6 +27,7 @@ public class GameCore : MonoBehaviour
         DataRecordManager.Instance.InitDataRecord();
     }
 
+    
     public void Update()
     {
         UpdateQuit();
@@ -36,9 +37,18 @@ public class GameCore : MonoBehaviour
         {
             LogicManager.Instance.CleanUpSave();
         }
-
+        
         TestStageUpdate();
 #endif
+    }
+
+    int screenShotIdx = 0;
+    public void ScreenShot()
+    {
+
+        ScreenCapture.CaptureScreenshot("build/Screenshot" + screenShotIdx + ".png");
+        ++screenShotIdx;
+
     }
 
     void UpdateQuit()
@@ -131,10 +141,10 @@ public class GameCore : MonoBehaviour
 
     public void InitLanguage()
     {
-//#if UNITY_EDITOR
-//        _StrVersion = 0;
-//        return;
-//#else
+#if UNITY_EDITOR
+        _StrVersion = 0;
+        return;
+#else
         if (Application.systemLanguage == SystemLanguage.Chinese
             || Application.systemLanguage == SystemLanguage.ChineseSimplified)
         {
@@ -148,12 +158,12 @@ public class GameCore : MonoBehaviour
         {
             _StrVersion = 0;
         }
-//#endif
+#endif
     }
 
-    #endregion
+#endregion
 
-    #region test stage
+#region test stage
 
     public class TestStageInfo
     {
@@ -265,7 +275,7 @@ public class GameCore : MonoBehaviour
         writerAll.Close();
     }
 
-    #endregion
+#endregion
 
 }
 

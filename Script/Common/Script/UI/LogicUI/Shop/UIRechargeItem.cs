@@ -21,7 +21,7 @@ public class UIRechargeItem : UIItemSelect
 
         ResourceManager.Instance.SetImage(_Icon, showItem.Icon);
         _Num.text = showItem.Num.ToString();
-        _Price.text = "$" + showItem.Price;
+        //_Price.text = "$" + showItem.Price;
     }
 
     

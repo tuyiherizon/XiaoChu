@@ -7,7 +7,7 @@ public class UITestPanel : MonoBehaviour {
     void Awake()
     {
 #if UNITY_EDITOR
-        gameObject.SetActive(true);
+        gameObject.SetActive(false);
 #else
         gameObject.SetActive(false);
 #endif

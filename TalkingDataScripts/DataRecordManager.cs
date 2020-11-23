@@ -29,7 +29,7 @@ public class DataRecordManager
 
     public void InitDataRecord()
     {
-        TalkingDataGA.OnStart("18CA14E84A59417B9266D490D14C50D7", "ggp");
+        TalkingDataGA.OnStart("18CA14E84A59417B9266D490D14C50D7", "amazon");
         account = TDGAAccount.SetAccount(TalkingDataGA.GetDeviceId());
 
         GameCore.Instance.EventController.RegisteEvent(EVENT_TYPE.EVENT_LOGIC_ENTER_STAGE, EnterStageHandle);
