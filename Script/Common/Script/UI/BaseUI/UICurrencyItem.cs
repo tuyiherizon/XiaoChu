@@ -122,7 +122,14 @@ public class UICurrencyItem : UIItemBase
         //    PlayerDataPack.Instance.AddMoney(_ShowOwnCurrency, 1000);
         //}
 
-        UIMoneyLackTip.ShowAsyn(_ShowOwnCurrency);
+        if (_ShowOwnCurrency.Equals(PlayerDataPack.MoneyDiamond))
+        {
+            UIRechargePack.ShowAsyn();
+        }
+        else
+        {
+            UIMoneyLackTip.ShowAsyn(_ShowOwnCurrency);
+        }
     }
 }
 
